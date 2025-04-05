@@ -1,7 +1,11 @@
+from dataclasses import asdict
+
 from aiogram import types
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+
+from bot.gmgn import get_coin_info
 
 
 class ClientManager(models.Manager):
@@ -37,12 +41,24 @@ class ClientManager(models.Manager):
 
 class WalletManager(models.Manager):
     async def add_to_client(self, address: str, client_id: int) -> 'Wallet':
-        wallet, created = await self.aget_or_create(address=address)
+        wallet, _ = await self.aget_or_create(address=address)
         await ClientWallet.objects.acreate(
             client_id=client_id,
             wallet=wallet,
         )
         return wallet
+
+
+class CoinManager(models.Manager):
+    async def add_to_client(self, address: str, client_id: int) -> 'Coin':
+        coin, _ = await self.aget_or_create(
+            asdict(await get_coin_info(address)), address=address,
+        )
+        await ClientCoin.objects.acreate(
+            client_id=client_id,
+            coin=coin,
+        )
+        return coin
 
 
 class User(AbstractUser):
@@ -101,10 +117,10 @@ class Wallet(models.Model):
 
 class Coin(models.Model):
     address = models.CharField('Адрес', max_length=255)
-    name = models.CharField('Название', max_length=255)
-    symbol = models.CharField('Символ', max_length=255)
-    logo = models.URLField('Лого')
-    objects: models.Manager
+    name = models.CharField('Название', max_length=255, blank=True)
+    symbol = models.CharField('Символ', max_length=255, blank=True)
+    logo = models.URLField('Лого', blank=True)
+    objects = CoinManager()
 
     class Meta:
         verbose_name = 'Монета'
@@ -112,7 +128,7 @@ class Coin(models.Model):
         ordering = ['name']
 
     def __str__(self):
-        return self.name
+        return f'{self.symbol} ({self.name})'
 
 
 class ClientWallet(models.Model):
@@ -125,10 +141,22 @@ class ClientWallet(models.Model):
         unique_together = ('client', 'wallet')
 
 
+class CoinTrackingParams(models.TextChoices):
+    PRICE_UP = 'price_up', 'Цена повышается'
+    PRICE_DOWN = 'price_down', 'Цена понижается'
+
+
 class ClientCoin(models.Model):
     client = models.ForeignKey(Client, models.CASCADE, 'coins')
     coin = models.ForeignKey(Coin, models.CASCADE, 'clients')
+    tracking_param = models.CharField(
+        'Параметр отслеживания',
+        max_length=100,
+        choices=CoinTrackingParams,
+        blank=True,
+    )
     created_at = models.DateTimeField('Дата создания', auto_now_add=True)
+
     objects: models.Manager
 
     class Meta:

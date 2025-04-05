@@ -14,7 +14,10 @@ router = Router()
 @router.message(Command('add_wallet'))
 @flags.with_client
 async def add_wallet(
-    msg: Message, state: FSMContext, command: CommandObject, client: Client,
+    msg: Message,
+    state: FSMContext,
+    command: CommandObject,
+    client: Client,
 ):
     if not command.args:
         await state.set_state(WalletState.address)
@@ -31,16 +34,13 @@ async def add_wallet(
 
 
 @router.message(F.text, StateFilter(WalletState.address))
-@flags.with_client
-async def add_or_update_wallet(
-    msg: Message, state: FSMContext, client: Client,
-):
+async def add_or_update_wallet(msg: Message, state: FSMContext):
     if wallet_id := await state.get_value('wallet_id'):
         wallet, _ = await Wallet.objects.aget_or_create(address=msg.text)
         try:
             await ClientWallet.objects.filter(
                 wallet_id=wallet_id,
-                client_id=client.pk,
+                client_id=msg.chat.id,
             ).aupdate(
                 wallet=wallet,
             )
@@ -49,7 +49,7 @@ async def add_or_update_wallet(
             return
     else:
         try:
-            wallet = await Wallet.objects.add_to_client(msg.text, client.pk)
+            wallet = await Wallet.objects.add_to_client(msg.text, msg.chat.id)
         except IntegrityError:
             await msg.answer('Такой кошелёк уже добавлен')
             return
@@ -59,7 +59,8 @@ async def add_or_update_wallet(
 
 
 @router.message(Command('edit_wallet'))
-async def wallets_list(msg: Message):
+async def wallets_list(msg: Message, state: FSMContext):
+    await state.update_data(wallet_id=None)
     await msg.answer(
         'Кошельки, которые вы отслеживаете',
         reply_markup=await get_wallets_list_keyboard(msg.chat.id),
@@ -67,7 +68,8 @@ async def wallets_list(msg: Message):
 
 
 @router.callback_query(F.data == 'wallets_list')
-async def to_wallets_list(query: CallbackQuery):
+async def to_wallets_list(query: CallbackQuery, state: FSMContext):
+    await state.update_data(wallet_id=None)
     await query.message.edit_text(
         'Кошельки, которые вы отслеживаете',
         reply_markup=await get_wallets_list_keyboard(query.message.chat.id),
@@ -85,7 +87,7 @@ async def wallet_detail(query: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(F.data == 'edit_wallet')
-async def edit(query: CallbackQuery, state: FSMContext):
+async def edit_wallet(query: CallbackQuery, state: FSMContext):
     await state.set_state(WalletState.address)
     await query.message.answer('Введите адрес кошелька')
 
@@ -93,9 +95,10 @@ async def edit(query: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == 'delete_wallet')
 async def delete_wallet(query: CallbackQuery, state: FSMContext):
     await ClientWallet.objects.filter(
-        wallet=await state.get_value('wallet_id'),
+        wallet_id=await state.get_value('wallet_id'),
         client_id=query.message.chat.id,
     ).adelete()
+    await state.update_data(wallet_id=None)
 
     await query.message.edit_text(
         'Кошельки, которые вы отслеживаете',

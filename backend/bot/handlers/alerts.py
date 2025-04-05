@@ -26,7 +26,8 @@ async def toggle_alerts(query: CallbackQuery):
     try:
         alerts_status = 'включены' if alerts_enabled else 'выключены'
         await query.message.edit_text(
-            f'Оповещения {alerts_status}', reply_markup=alerts_kb,
+            f'Оповещения {alerts_status}',
+            reply_markup=alerts_kb,
         )
     except TelegramBadRequest:
         pass

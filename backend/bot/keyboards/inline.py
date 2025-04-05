@@ -3,7 +3,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from django.db.models import Model, QuerySet
 
 from bot.settings import settings
-from core.models import Wallet
+from core.models import Coin, CoinTrackingParams, Wallet
 
 wallet_kb = InlineKeyboardMarkup(
     inline_keyboard=[
@@ -26,6 +26,32 @@ wallet_kb = InlineKeyboardMarkup(
     ],
 )
 
+coin_kb = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text='Редактировать',
+                callback_data='edit_coin',
+            ),
+            InlineKeyboardButton(
+                text='Удалить',
+                callback_data='delete_coin',
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text='Параметры отслеживания',
+                callback_data='set_coin_tracking_params',
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text='Назад',
+                callback_data='coins_list',
+            ),
+        ],
+    ],
+)
 
 alerts_kb = InlineKeyboardMarkup(
     inline_keyboard=[
@@ -124,3 +150,18 @@ async def get_wallets_list_keyboard(client_id: int):
         filters={'clients__client': client_id},
         prefix='wallet',
     )
+
+
+async def get_coins_list_keyboard(client_id: int):
+    return await get_paginated_keyboard(
+        Coin,
+        filters={'clients__client': client_id},
+        prefix='coin',
+    )
+
+
+async def get_coin_tracking_params_kb():
+    kb = InlineKeyboardBuilder()
+    for value, label in CoinTrackingParams.choices:
+        kb.button(text=label, callback_data=value)
+    return kb.adjust(1).as_markup()
