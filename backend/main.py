@@ -13,6 +13,7 @@ async def main():
     django.setup()
 
     from bot.handlers import alerts, coin, commands, wallet
+    from bot.middlewares import WithClientMiddleware
 
     dp.include_routers(
         commands.router,
@@ -21,6 +22,7 @@ async def main():
         alerts.router,
     )
     dp.message.filter(F.chat.type == ChatType.PRIVATE)
+    dp.message.middleware(WithClientMiddleware())
 
     await bot.delete_webhook(drop_pending_updates=True)
     await bot.set_my_commands(

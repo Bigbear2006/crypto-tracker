@@ -1,4 +1,4 @@
-from aiogram import Router
+from aiogram import Router, flags
 from aiogram.filters import Command
 from aiogram.types import Message
 
@@ -9,11 +9,9 @@ router = Router()
 
 
 @router.message(Command('start'))
-async def start(msg: Message):
-    client, created = await Client.objects.create_or_update_from_tg_user(
-        msg.from_user,
-    )
-    if created:
+@flags.with_client
+async def start(msg: Message, client: Client, client_created: bool):
+    if client_created:
         logger.info(f'New client {client} id={client.pk} was created')
     else:
         logger.info(f'Client {client} id={client.pk} was updated')

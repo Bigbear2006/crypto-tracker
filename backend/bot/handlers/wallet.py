@@ -1,4 +1,4 @@
-from aiogram import F, Router
+from aiogram import F, Router, flags
 from aiogram.filters import Command, CommandObject, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
@@ -12,15 +12,14 @@ router = Router()
 
 
 @router.message(Command('add_wallet'))
-async def add_wallet(msg: Message, state: FSMContext, command: CommandObject):
+@flags.with_client
+async def add_wallet(
+    msg: Message, state: FSMContext, command: CommandObject, client: Client,
+):
     if not command.args:
         await state.set_state(WalletState.address)
         await msg.answer('Введите адрес кошелька')
         return
-
-    client, _ = await Client.objects.create_or_update_from_tg_user(
-        msg.from_user,
-    )
 
     try:
         wallet = await Wallet.objects.add_to_client(command.args, client.pk)
@@ -32,11 +31,10 @@ async def add_wallet(msg: Message, state: FSMContext, command: CommandObject):
 
 
 @router.message(F.text, StateFilter(WalletState.address))
-async def add_or_update_wallet(msg: Message, state: FSMContext):
-    client, _ = await Client.objects.create_or_update_from_tg_user(
-        msg.from_user,
-    )
-
+@flags.with_client
+async def add_or_update_wallet(
+    msg: Message, state: FSMContext, client: Client,
+):
     if wallet_id := await state.get_value('wallet_id'):
         wallet, _ = await Wallet.objects.aget_or_create(address=msg.text)
         try:
@@ -62,13 +60,9 @@ async def add_or_update_wallet(msg: Message, state: FSMContext):
 
 @router.message(Command('edit_wallet'))
 async def wallets_list(msg: Message):
-    client, created = await Client.objects.create_or_update_from_tg_user(
-        msg.from_user,
-    )
-
     await msg.answer(
         'Кошельки, которые вы отслеживаете',
-        reply_markup=await get_wallets_list_keyboard(client.pk),
+        reply_markup=await get_wallets_list_keyboard(msg.chat.id),
     )
 
 

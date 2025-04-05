@@ -27,6 +27,22 @@ wallet_kb = InlineKeyboardMarkup(
 )
 
 
+alerts_kb = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text='Вкл.',
+                callback_data='enable_alerts',
+            ),
+            InlineKeyboardButton(
+                text='Выкл.',
+                callback_data='disable_alerts',
+            ),
+        ],
+    ],
+)
+
+
 async def get_pagination_buttons(
     previous_button_data: str = None,
     next_button_data: str = None,
