@@ -20,7 +20,10 @@ router = Router()
 @router.message(Command('add_coin'))
 @flags.with_client
 async def add_coin(
-    msg: Message, state: FSMContext, command: CommandObject, client: Client,
+    msg: Message,
+    state: FSMContext,
+    command: CommandObject,
+    client: Client,
 ):
     if not command.args:
         await state.set_state(CoinState.address)
@@ -140,7 +143,8 @@ async def set_coin_tracking_params(query: CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data.in_(CoinTrackingParams.values))
 async def toggle_tracking_params(
-        query: CallbackQuery, state: FSMContext,
+    query: CallbackQuery,
+    state: FSMContext,
 ):
     await ClientCoin.objects.filter(
         coin_id=await state.get_value('coin_id'),

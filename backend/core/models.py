@@ -52,7 +52,8 @@ class WalletManager(models.Manager):
 class CoinManager(models.Manager):
     async def add_to_client(self, address: str, client_id: int) -> 'Coin':
         coin, _ = await self.aget_or_create(
-            asdict(await get_coin_info(address)), address=address,
+            asdict(await get_coin_info(address, 'sol')),
+            address=address,
         )
         await ClientCoin.objects.acreate(
             client_id=client_id,
