@@ -4,13 +4,12 @@ import django
 from aiogram import F
 from aiogram.enums import ChatType
 from aiogram.types import BotCommand
-from backend.bot import gmgn
 
 from bot.loader import bot, dp, logger, loop
 
 
 async def main():
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'project.settings')
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
     django.setup()
 
     # print(

@@ -46,7 +46,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'project.urls'
+ROOT_URLCONF = 'backend.urls'
 
 TEMPLATES = [
     {
@@ -63,7 +63,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'project.wsgi.application'
+WSGI_APPLICATION = 'backend.wsgi.application'
 
 
 # Database
@@ -71,8 +71,12 @@ WSGI_APPLICATION = 'project.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': env('POSTGRES_DB'),
+        'USER': env('POSTGRES_USER'),
+        'PASSWORD': env('POSTGRES_PASSWORD'),
+        'HOST': 'db',
+        'PORT': 5432,
     },
 }
 
@@ -125,10 +129,16 @@ STATIC_ROOT = 'static'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Auth
+
+# Auth user model
+# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-user-model
+
 AUTH_USER_MODEL = 'core.User'
 
-# Logging
+
+# Logging configuration
+# https://docs.djangoproject.com/en/5.2/ref/settings/#logging
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -157,14 +167,24 @@ LOGGING = {
     },
     'loggers': {
         'bot': {
-            'handlers': ['console'],
+            'handlers': ['bot_file', 'console'],
             'level': 'INFO',
             'propagate': False,
         },
         'django': {
-            'handlers': ['console'],
+            'handlers': ['django_file', 'console'],
             'level': 'INFO',
             'propagate': False,
         },
     },
 }
+
+
+# Celery configuration options
+# https://docs.celeryq.dev/en/latest/django/first-steps-with-django.html
+
+CELERY_BROKER_URL = env('CELERY_BROKER_URL')
+
+CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND')
+
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = False

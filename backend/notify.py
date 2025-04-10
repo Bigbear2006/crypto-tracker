@@ -11,7 +11,7 @@ from bot.loader import bot, logger
 from bot.schemas import CoinPrice
 from bot.settings import settings
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'project.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
 django.setup()
 
 from core.models import Client, Coin, CoinTrackingParams, Wallet  # noqa
@@ -72,8 +72,10 @@ async def notify_wallet_buying():
 async def notify_coin_price_changes():
     async def _notify(addresses: list[str], chain: str):
         async def __notify(_clients: QuerySet, _price: CoinPrice):
-            msg_text = f'Монета\nЦена сейчас: {_price.price}\n' \
-                       f'Цена минуту назад: {_price.price_1m}'
+            msg_text = (
+                f'Монета\nЦена сейчас: {_price.price}\n'
+                f'Цена минуту назад: {_price.price_1m}'
+            )
 
             await asyncio.wait(
                 [
@@ -90,7 +92,7 @@ async def notify_coin_price_changes():
                     if price.price > price.price_1m
                     else CoinTrackingParams.PRICE_DOWN,
                     coins__tracking_price__gte=abs(
-                        price.price - price.price_1m
+                        price.price - price.price_1m,
                     ),
                 ),
                 price,
@@ -105,7 +107,7 @@ async def notify_coin_price_changes():
     await asyncio.wait(
         [
             asyncio.create_task(_notify(**coin))
-            async for coin in Coin.objects.values('chain').aggregate(
+            async for coin in await Coin.objects.values('chain').aaggregate(
                 addresses=ArrayAgg('address'),
             )
         ],
@@ -113,4 +115,4 @@ async def notify_coin_price_changes():
 
 
 if __name__ == '__main__':
-    asyncio.run(notify_wallet_buying())
+    asyncio.run(notify_coin_price_changes())
