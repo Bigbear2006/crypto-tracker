@@ -14,13 +14,26 @@ class CoinInfo(BaseCoinInfo):
 
 
 @dataclass
+class CoinPrice:
+    address: str
+    price: float
+    price_1m: float
+
+
+@dataclass
 class WalletActivity:
-    cost_usd: str
-    price_usd: str
+    event_type: str
+    cost_usd: float
+    price_usd: float
     token: BaseCoinInfo
-    token_amount: str
+    token_amount: float
     timestamp: str
+    tx_hash: str
 
     def to_text(self):
-        return f'Покупка {self.token_amount} монет {self.token.symbol} ' \
-               f'по цене {self.price_usd} на общую сумму {self.cost_usd}'
+        return (
+            f'Монета: {self.token.symbol}\n'
+            f'Количество: {self.token_amount}\n'
+            f'Цена: {self.price_usd}\n'
+            f'Общая сумма покупки: {self.cost_usd}'
+        )

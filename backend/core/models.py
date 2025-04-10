@@ -106,6 +106,7 @@ class Client(models.Model):
 
 class Wallet(models.Model):
     address = models.CharField('Адрес', max_length=255)
+    chain = models.CharField('Блокчейн', max_length=255)
     objects = WalletManager()
 
     class Meta:
@@ -118,6 +119,7 @@ class Wallet(models.Model):
 
 class Coin(models.Model):
     address = models.CharField('Адрес', max_length=255)
+    chain = models.CharField('Блокчейн', max_length=255)
     name = models.CharField('Название', max_length=255, blank=True)
     symbol = models.CharField('Символ', max_length=255, blank=True)
     logo = models.URLField('Лого', blank=True)
@@ -154,6 +156,11 @@ class ClientCoin(models.Model):
         'Параметр отслеживания',
         max_length=100,
         choices=CoinTrackingParams,
+        blank=True,
+    )
+    tracking_price = models.FloatField(
+        'Отслеживаемая цена',
+        null=True,
         blank=True,
     )
     created_at = models.DateTimeField('Дата создания', auto_now_add=True)
