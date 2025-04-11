@@ -1,4 +1,10 @@
 from dataclasses import dataclass
+from enum import StrEnum
+
+
+class EventType(StrEnum):
+    buy = 'buy'
+    sell = 'sell'
 
 
 @dataclass
@@ -16,17 +22,17 @@ class CoinInfo(BaseCoinInfo):
 @dataclass
 class CoinPrice:
     address: str
-    price: float
-    price_1m: float
+    price: str
+    price_1m: str
 
 
 @dataclass
 class WalletActivity:
-    event_type: str
-    cost_usd: float
-    price_usd: float
+    event_type: EventType
+    cost_usd: str
+    price_usd: str
     token: BaseCoinInfo
-    token_amount: float
+    token_amount: str
     timestamp: str
     tx_hash: str
 

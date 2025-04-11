@@ -3,22 +3,27 @@ import string
 
 from aiohttp import ClientSession
 
+from bot.loader import logger
 from bot.schemas import BaseCoinInfo, CoinInfo, CoinPrice, WalletActivity
 from bot.settings import settings
 
 
 def get_headers():
     return {
+        'Cookie': settings.GMGN_COOKIE,
+        'Origin': 'https://gmgn.ai',
+        'Sec-Fetch-Dest': 'empty',
+        'Sec-Fetch-Mode': 'cors',
+        'Sec-Fetch-Site': 'same-origin',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
         'AppleWebKit/537.36 (KHTML, like Gecko) '
         'Chrome/135.0.0.0 Safari/537.36',
-        'Cookie': settings.GMGN_COOKIE,
     }
 
 
 async def __get_coin_info(address: str) -> CoinInfo:
     name = ''.join(random.choices(string.ascii_lowercase, k=5))
-    return CoinInfo(address, name.upper(), name.title(), '')
+    return CoinInfo(address, name.upper(), '', name.title())
 
 
 async def get_coins_info(addresses: list[str], chain: str) -> list[CoinInfo]:
@@ -33,7 +38,9 @@ async def get_coins_info(addresses: list[str], chain: str) -> list[CoinInfo]:
             json=data,
         ) as rsp:
             data = await rsp.json()
-            # logger.info(data)
+            if data['data'] is None:
+                logger.info(f'Response<{rsp.status}> data is null: {data}')
+                return []
             return [
                 CoinInfo(i['address'], i['symbol'], i['logo'], i['name'])
                 for i in data['data']
@@ -58,7 +65,6 @@ async def get_wallet_activity(
             params=params,
         ) as rsp:
             data = await rsp.json()
-            # logger.info(json.dumps(data, indent=4))
             return [
                 WalletActivity(
                     i['event_type'],
@@ -77,4 +83,22 @@ async def get_coins_prices(
     addresses: list[str],
     chain: str,
 ) -> list[CoinPrice]:
-    return []
+    data = {
+        'chain': chain,
+        'addresses': addresses,
+    }
+    async with ClientSession(settings.GMGN_API_URL) as session:
+        async with session.post(
+            'mutil_window_token_info',
+            headers=get_headers(),
+            json=data,
+        ) as rsp:
+            data = await rsp.json()
+            return [
+                CoinPrice(
+                    i['address'],
+                    i['price']['price'],
+                    i['price']['price_1m'],
+                )
+                for i in data['data']
+            ]

@@ -7,3 +7,4 @@ class WalletState(StatesGroup):
 
 class CoinState(StatesGroup):
     address = State()
+    tracking_price = State()

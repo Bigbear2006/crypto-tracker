@@ -46,6 +46,12 @@ coin_kb = InlineKeyboardMarkup(
         ],
         [
             InlineKeyboardButton(
+                text='Отслеживаемая цена',
+                callback_data='set_coin_tracking_price',
+            ),
+        ],
+        [
+            InlineKeyboardButton(
                 text='Назад',
                 callback_data='coins_list',
             ),
@@ -124,8 +130,8 @@ async def get_paginated_keyboard(
     page: int = 1,
     prefix: str = '',
     back_button_data: str = None,
-    previous_button_data: str = 'catalog_previous',
-    next_button_data: str = 'catalog_next',
+    previous_button_data: str = 'wallets_previous',
+    next_button_data: str = 'wallets_next',
 ) -> InlineKeyboardMarkup:
     if not filters:
         filters = {}
@@ -144,6 +150,21 @@ async def get_paginated_keyboard(
     )
 
 
+def one_button_keyboard(
+    *,
+    back_button_data: str = None,
+    **kwargs,
+) -> InlineKeyboardMarkup:
+    kb = InlineKeyboardBuilder()
+
+    kb.button(**kwargs)
+    if back_button_data:
+        kb.button(text='Назад', callback_data=back_button_data)
+
+    kb.adjust(1)
+    return kb.as_markup()
+
+
 async def get_wallets_list_keyboard(client_id: int):
     return await get_paginated_keyboard(
         Wallet,
@@ -160,8 +181,10 @@ async def get_coins_list_keyboard(client_id: int):
     )
 
 
-async def get_coin_tracking_params_kb():
+async def get_coin_tracking_params_kb(*, back_button_data: str = None):
     kb = InlineKeyboardBuilder()
     for value, label in CoinTrackingParams.choices:
         kb.button(text=label, callback_data=value)
+    if back_button_data:
+        kb.button(text='Назад', callback_data=back_button_data)
     return kb.adjust(1).as_markup()

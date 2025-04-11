@@ -47,14 +47,18 @@ async def safe_send_message(chat_id: int | str, text: str):
 async def notify_wallet_buying():
     async def _notify(_wallet: Wallet):
         activities = [
-            a
-            for a in await gmgn.get_wallet_activity(_wallet.address, 'sol')
-            if a.cost_usd >= settings.MIN_BUYING_AMOUNT
-            and a.price_usd <= settings.MAX_COIN_PRICE
+            activity
+            for activity in await gmgn.get_wallet_activity(
+                _wallet.address,
+                _wallet.chain,
+            )
+            if float(activity.cost_usd) >= settings.MIN_BUYING_AMOUNT
+            and float(activity.price_usd) <= settings.MAX_COIN_PRICE
+            and activity.event_type == 'buy'
         ]
 
         msg_text = f'Кошелёк {_wallet.address}\n\n' + '\n\n'.join(
-            [a.to_text() for a in activities[:1]],
+            [a.to_text() for a in activities],
         )
 
         await asyncio.wait(
@@ -71,9 +75,9 @@ async def notify_wallet_buying():
 
 async def notify_coin_price_changes():
     async def _notify(addresses: list[str], chain: str):
-        async def __notify(_clients: QuerySet, _price: CoinPrice):
+        async def __notify(_clients: QuerySet, _coin: Coin, _price: CoinPrice):
             msg_text = (
-                f'Монета\nЦена сейчас: {_price.price}\n'
+                f'Монета {_coin}\nЦена сейчас: {_price.price}\n'
                 f'Цена минуту назад: {_price.price_1m}'
             )
 
@@ -84,30 +88,31 @@ async def notify_coin_price_changes():
                 ],
             )
 
-        clients = [
-            (
-                Client.objects.filter(
-                    coins__coin__address=price.address,
-                    coins__tracking_param=CoinTrackingParams.PRICE_UP
-                    if price.price > price.price_1m
-                    else CoinTrackingParams.PRICE_DOWN,
-                    coins__tracking_price__gte=abs(
-                        price.price - price.price_1m,
-                    ),
-                ),
-                price,
-            )
-            for price in await gmgn.get_coins_prices(addresses, chain)
-        ]
-
         await asyncio.wait(
-            [asyncio.create_task(__notify(*c)) for c in clients],
+            [
+                asyncio.create_task(
+                    __notify(
+                        Client.objects.filter(
+                            coins__coin__address=price.address,
+                            coins__tracking_param=CoinTrackingParams.PRICE_UP
+                            if price.price > price.price_1m
+                            else CoinTrackingParams.PRICE_DOWN,
+                            coins__tracking_price__gte=abs(
+                                float(price.price) - float(price.price_1m),
+                            ),
+                        ),
+                        await Coin.objects.aget(address=price.address),
+                        price,
+                    ),
+                )
+                for price in await gmgn.get_coins_prices(addresses, chain)
+            ],
         )
 
     await asyncio.wait(
         [
             asyncio.create_task(_notify(**coin))
-            async for coin in await Coin.objects.values('chain').aaggregate(
+            async for coin in Coin.objects.values('chain').annotate(
                 addresses=ArrayAgg('address'),
             )
         ],
@@ -115,4 +120,4 @@ async def notify_coin_price_changes():
 
 
 if __name__ == '__main__':
-    asyncio.run(notify_coin_price_changes())
+    asyncio.run(notify_wallet_buying())

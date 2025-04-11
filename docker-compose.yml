@@ -75,9 +75,7 @@ services:
     restart: always
     ports:
       - "80:80"
-      - "443:443"
     volumes:
       - ./backend/static:/var/www/static
     depends_on:
-      - celery
-      - celery-beat
+      - django

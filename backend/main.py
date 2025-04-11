@@ -12,18 +12,6 @@ async def main():
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
     django.setup()
 
-    # print(
-    #     await gmgn.get_coins_info(
-    #         ['EQ8XnCvwZvhdJZZZeJeRv5bYyNTz5vQ4TL9VFxwCPcZc'], 'sol'
-    #     )
-    # )
-    # print(
-    #     await gmgn.get_wallet_activity(
-    #         'DvFtsNc6qUsRKC5vZB6tBoVXKG3exHJdgutMuamXQAeS',
-    #         'sol',
-    #     ),
-    # )
-
     from bot.handlers import alerts, coin, commands, wallet
     from bot.middlewares import WithClientMiddleware
 
@@ -51,10 +39,6 @@ async def main():
             BotCommand(
                 command='/add_coin',
                 description='Добавить монету для отслеживания',
-            ),
-            BotCommand(
-                command='/track_coin',
-                description='Установить параметры отслеживания',
             ),
             BotCommand(
                 command='/edit_coin',
