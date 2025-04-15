@@ -40,8 +40,13 @@ class ClientManager(models.Manager):
 
 
 class WalletManager(models.Manager):
-    async def add_to_client(self, address: str, client_id: int) -> 'Wallet':
-        wallet, _ = await self.aget_or_create(address=address, chain='sol')
+    async def add_to_client(
+        self,
+        address: str,
+        chain: str,
+        client_id: int,
+    ) -> 'Wallet':
+        wallet, _ = await self.aget_or_create(address=address, chain=chain)
         await ClientWallet.objects.acreate(
             client_id=client_id,
             wallet=wallet,
@@ -50,14 +55,46 @@ class WalletManager(models.Manager):
 
 
 class CoinManager(models.Manager):
-    async def add_to_client(self, address: str, client_id: int) -> 'Coin':
-        coin, _ = await self.aget_or_create(
-            asdict(await get_coin_info(address, 'sol')),
-            address=address,
-            chain='sol',
-        )
+    async def add_to_client(
+        self,
+        address: str,
+        chain: str,
+        client_id: int,
+    ) -> 'Coin':
+        try:
+            coin = await self.aget(address=address, chain=chain)
+        except ObjectDoesNotExist:
+            coin = await self.acreate(
+                chain=chain,
+                **asdict(await get_coin_info(address, chain)),
+            )
+
         await ClientCoin.objects.acreate(
             client_id=client_id,
+            coin=coin,
+        )
+        return coin
+
+    async def update_client_coin(
+        self,
+        address: str,
+        chain: str,
+        *,
+        client_id: int,
+        coin_id: int,
+    ) -> 'Coin':
+        try:
+            coin = await self.aget(address=address, chain=chain)
+        except ObjectDoesNotExist:
+            coin = await self.acreate(
+                chain=chain,
+                **asdict(await get_coin_info(address, chain)),
+            )
+
+        await ClientCoin.objects.filter(
+            client_id=client_id,
+            coin_id=coin_id,
+        ).aupdate(
             coin=coin,
         )
         return coin
@@ -113,9 +150,10 @@ class Wallet(models.Model):
     class Meta:
         verbose_name = 'Кошелёк'
         verbose_name_plural = 'Кошельки'
+        ordering = ['address']
 
     def __str__(self):
-        return self.address
+        return f'{self.address[:10]}... ({self.chain})'
 
 
 class Coin(models.Model):
@@ -129,10 +167,10 @@ class Coin(models.Model):
     class Meta:
         verbose_name = 'Монета'
         verbose_name_plural = 'Монеты'
-        ordering = ['name']
+        ordering = ['symbol']
 
     def __str__(self):
-        return f'{self.symbol} ({self.name})'
+        return self.symbol
 
 
 class ClientWallet(models.Model):
@@ -170,3 +208,11 @@ class ClientCoin(models.Model):
 
     class Meta:
         unique_together = ('client', 'coin')
+
+
+class TxHash(models.Model):
+    tx_hash = models.TextField()
+    objects: models.Manager
+
+    def __str__(self):
+        return self.tx_hash[:50]

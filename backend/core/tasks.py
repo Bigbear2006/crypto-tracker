@@ -1,24 +1,22 @@
 import asyncio
-import os
 
-import django
 from aiogram.exceptions import TelegramBadRequest, TelegramRetryAfter
+from asgiref.sync import sync_to_async
+from celery import shared_task
+from celery.utils.log import get_task_logger
 from django.contrib.postgres.aggregates import ArrayAgg
-from django.db.models import QuerySet
+from django.db.models import QuerySet, Count
 
 from bot import gmgn
-from bot.loader import bot, logger
-from bot.schemas import CoinPrice
+from bot.loader import bot
+from bot.schemas import CoinPrice, EventType
 from bot.settings import settings
+from core.models import Client, Coin, CoinTrackingParams, Wallet, TxHash
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
-django.setup()
-
-from core.models import Client, Coin, CoinTrackingParams, Wallet  # noqa
-
-task_logger = logger
+task_logger = get_task_logger(__name__)
 
 
+@shared_task
 def handle_send_message_errors(send_message_func):
     async def decorator(chat_id: str | int, text: str):
         try:
@@ -44,7 +42,11 @@ async def safe_send_message(chat_id: int | str, text: str):
     await bot.send_message(chat_id, text)
 
 
-async def notify_wallet_buying():
+def chunk_list(lst: list, size: int) -> list:
+    return [lst[i:i + size] for i in range(0, len(lst), size)]
+
+
+def notify_wallet_buying():
     async def _notify(_wallet: Wallet):
         activities = [
             activity
@@ -54,7 +56,34 @@ async def notify_wallet_buying():
             )
             if float(activity.cost_usd) >= settings.MIN_BUYING_AMOUNT
             and float(activity.price_usd) <= settings.MAX_COIN_PRICE
-            and activity.event_type == 'buy'
+            and activity.event_type == EventType.buy
+        ]
+
+        already_sent_activities = sync_to_async(list)(
+            TxHash.objects.filter(
+                tx_hash__in=[a.tx_hash for a in activities]
+            ).values_list('tx_hash', flat=True)
+        )
+
+        activities = [
+            activity
+            for activity in activities
+            if activity.tx_hash not in already_sent_activities
+        ]
+
+        coins_with_sufficient_mkt_cap = [
+            coin
+            for coin in await gmgn.get_coins_mkt_cap(
+                list({activity.token.address for activity in activities}),
+                _wallet.chain,
+            )
+            if coin.mkt_cap > settings.MIN_COIN_MKT_CAP
+        ]
+
+        activities = [
+            activity
+            for activity in activities
+            if activity.token.address in coins_with_sufficient_mkt_cap
         ]
 
         msg_text = f'Кошелёк {_wallet.address}\n\n' + '\n\n'.join(
@@ -68,12 +97,24 @@ async def notify_wallet_buying():
             ],
         )
 
-    await asyncio.wait(
-        [asyncio.create_task(_notify(w)) async for w in Wallet.objects.all()],
-    )
+        await TxHash.objects.abulk_create([TxHash(tx_hash=activity.tx_hash) for activity in activities])
+
+    async def main():
+        await asyncio.wait(
+            [
+                asyncio.create_task(_notify(w))
+                async for w in Wallet.objects.all()
+            ],
+        )
+
+    loop = asyncio.get_event_loop()
+    if loop.is_closed():
+        loop = asyncio.new_event_loop()
+    loop.run_until_complete(main())
 
 
-async def notify_coin_price_changes():
+@shared_task
+def notify_coin_price_changes():
     async def _notify(addresses: list[str], chain: str):
         async def __notify(_clients: QuerySet, _coin: Coin, _price: CoinPrice):
             msg_text = (
@@ -88,6 +129,7 @@ async def notify_coin_price_changes():
                 ],
             )
 
+        addresses = chunk_list(addresses, 10)
         await asyncio.wait(
             [
                 asyncio.create_task(
@@ -105,19 +147,22 @@ async def notify_coin_price_changes():
                         price,
                     ),
                 )
-                for price in await gmgn.get_coins_prices(addresses, chain)
+                for addresses_chunk in addresses
+                for price in await gmgn.get_coins_prices(addresses_chunk, chain)
             ],
         )
 
-    await asyncio.wait(
-        [
-            asyncio.create_task(_notify(**coin))
-            async for coin in Coin.objects.values('chain').annotate(
-                addresses=ArrayAgg('address'),
-            )
-        ],
-    )
+    async def main():
+        await asyncio.wait(
+            [
+                asyncio.create_task(_notify(**coin))
+                async for coin in Coin.objects.values('chain').annotate(
+                    addresses=ArrayAgg('address'),
+                )
+            ],
+        )
 
-
-if __name__ == '__main__':
-    asyncio.run(notify_wallet_buying())
+    loop = asyncio.get_event_loop()
+    if loop.is_closed():
+        loop = asyncio.new_event_loop()
+    loop.run_until_complete(main())

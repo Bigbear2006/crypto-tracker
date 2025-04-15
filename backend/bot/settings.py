@@ -11,7 +11,7 @@ def load_gmgn_cookie() -> str:
         with open('cookie.txt') as f:
             cookie = f.read()
     except FileNotFoundError:
-        with open('cookie.txt'):
+        with open('cookie.txt', 'w'):
             cookie = ''
     return cookie
 

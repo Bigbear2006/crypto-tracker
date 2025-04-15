@@ -27,6 +27,17 @@ class CoinPrice:
 
 
 @dataclass
+class CoinMKTCap:
+    address: str
+    circulating_supply: str
+    price: str
+
+    @property
+    def mkt_cap(self) -> float:
+        return float(self.circulating_supply) * float(self.price)
+
+
+@dataclass
 class WalletActivity:
     event_type: EventType
     cost_usd: str

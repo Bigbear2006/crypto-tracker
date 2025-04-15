@@ -74,6 +74,21 @@ alerts_kb = InlineKeyboardMarkup(
     ],
 )
 
+chains_kb = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(text='SOL', callback_data='chain_sol'),
+            InlineKeyboardButton(text='ETH', callback_data='chain_eth'),
+            InlineKeyboardButton(text='Base', callback_data='chain_base'),
+        ],
+        [
+            InlineKeyboardButton(text='BSC', callback_data='chain_bsc'),
+            InlineKeyboardButton(text='Tron', callback_data='chain_tron'),
+            InlineKeyboardButton(text='Blast', callback_data='chain_blast'),
+        ],
+    ]
+)
+
 
 async def get_pagination_buttons(
     previous_button_data: str = None,
@@ -165,19 +180,23 @@ def one_button_keyboard(
     return kb.as_markup()
 
 
-async def get_wallets_list_keyboard(client_id: int):
+async def get_wallets_list_keyboard(client_id: int, *, page: int = 1):
     return await get_paginated_keyboard(
         Wallet,
         filters={'clients__client': client_id},
         prefix='wallet',
+        page=page,
     )
 
 
-async def get_coins_list_keyboard(client_id: int):
+async def get_coins_list_keyboard(client_id: int, *, page: int = 1):
     return await get_paginated_keyboard(
         Coin,
         filters={'clients__client': client_id},
         prefix='coin',
+        page=page,
+        previous_button_data='coin_previous',
+        next_button_data='coins_next',
     )
 
 

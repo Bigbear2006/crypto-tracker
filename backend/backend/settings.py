@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from celery.schedules import crontab
 from environs import Env
 
 env = Env()
@@ -188,3 +189,14 @@ CELERY_BROKER_URL = env('CELERY_BROKER_URL')
 CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND')
 
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = False
+
+# CELERY_BEAT_SCHEDULE = {
+#     'notify_wallet_buying': {
+#         'task': 'core.tasks.notify_wallet_buying',
+#         'schedule': crontab('*/1'),
+#     },
+#     'notify_coin_price_changes': {
+#         'task': 'core.tasks.notify_coin_price_changes',
+#         'schedule': crontab('*/1'),
+#     },
+# }

@@ -1,10 +1,10 @@
 import random
 import string
 
-from aiohttp import ClientSession
+from aiohttp import ClientResponse, ClientSession, ContentTypeError
 
 from bot.loader import logger
-from bot.schemas import BaseCoinInfo, CoinInfo, CoinPrice, WalletActivity
+from bot.schemas import BaseCoinInfo, CoinInfo, CoinPrice, WalletActivity, CoinMKTCap
 from bot.settings import settings
 
 
@@ -21,9 +21,18 @@ def get_headers():
     }
 
 
-async def __get_coin_info(address: str) -> CoinInfo:
-    name = ''.join(random.choices(string.ascii_lowercase, k=5))
-    return CoinInfo(address, name.upper(), '', name.title())
+async def safe_get_json(rsp: ClientResponse) -> dict | None:
+    try:
+        data = await rsp.json()
+    except ContentTypeError:
+        logger.info(f'Response<{rsp.status}> returns unexpected mimetype')
+        return None
+
+    if data['data'] is None:
+        logger.info(f'Response<{rsp.status}> data is null: {data}')
+        return None
+
+    return data
 
 
 async def get_coins_info(addresses: list[str], chain: str) -> list[CoinInfo]:
@@ -37,10 +46,10 @@ async def get_coins_info(addresses: list[str], chain: str) -> list[CoinInfo]:
             headers=get_headers(),
             json=data,
         ) as rsp:
-            data = await rsp.json()
-            if data['data'] is None:
-                logger.info(f'Response<{rsp.status}> data is null: {data}')
+            data = await safe_get_json(rsp)
+            if not data:
                 return []
+
             return [
                 CoinInfo(i['address'], i['symbol'], i['logo'], i['name'])
                 for i in data['data']
@@ -48,7 +57,9 @@ async def get_coins_info(addresses: list[str], chain: str) -> list[CoinInfo]:
 
 
 async def get_coin_info(address: str, chain: str) -> CoinInfo:
-    return (await get_coins_info([address], chain))[0]
+    name = ''.join(random.choices(string.ascii_lowercase, k=5))
+    return CoinInfo(address, name.upper(), '', name.title())
+    # return (await get_coins_info([address], chain))[0]
 
 
 async def get_wallet_activity(
@@ -64,7 +75,10 @@ async def get_wallet_activity(
             headers=get_headers(),
             params=params,
         ) as rsp:
-            data = await rsp.json()
+            data = await safe_get_json(rsp)
+            if not data:
+                return []
+
             return [
                 WalletActivity(
                     i['event_type'],
@@ -93,7 +107,10 @@ async def get_coins_prices(
             headers=get_headers(),
             json=data,
         ) as rsp:
-            data = await rsp.json()
+            data = await safe_get_json(rsp)
+            if not data:
+                return []
+
             return [
                 CoinPrice(
                     i['address'],
@@ -102,3 +119,10 @@ async def get_coins_prices(
                 )
                 for i in data['data']
             ]
+
+
+async def get_coins_mkt_cap(
+    addresses: list[str],
+    chain: str,
+) -> list[CoinMKTCap]:
+    return []

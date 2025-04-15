@@ -9,7 +9,7 @@ from bot.keyboards.inline import (
     coin_kb,
     get_coin_tracking_params_kb,
     get_coins_list_keyboard,
-    one_button_keyboard,
+    one_button_keyboard, chains_kb,
 )
 from bot.states import CoinState
 from core.models import Client, ClientCoin, Coin, CoinTrackingParams
@@ -18,50 +18,69 @@ router = Router()
 
 
 @router.message(Command('add_coin'))
-@flags.with_client
 async def add_coin(
     msg: Message,
     state: FSMContext,
     command: CommandObject,
-    client: Client,
 ):
     if not command.args:
         await state.set_state(CoinState.address)
         await msg.answer('Введите адрес монеты')
         return
 
-    try:
-        coin = await Coin.objects.add_to_client(command.args, client.pk)
-    except IntegrityError:
-        await msg.answer('Такая монета уже добавлена')
-        return
-
-    await msg.answer(f'Монета {coin.name} добавлена')
+    await state.update_data(coin_address=command.args)
+    await state.set_state(CoinState.chain)
+    await msg.answer('Выберите блокчейн кошелька', reply_markup=chains_kb)
 
 
 @router.message(F.text, StateFilter(CoinState.address))
-async def add_or_update_coin(msg: Message, state: FSMContext):
-    if coin_id := await state.get_value('coin_id'):
-        coin, _ = await Coin.objects.aget_or_create(address=msg.text)
+async def set_coin_address(msg: Message, state: FSMContext):
+    await state.update_data(coin_address=msg.text)
+    await state.set_state(CoinState.chain)
+    await msg.answer('Выберите блокчейн монеты', reply_markup=chains_kb)
+
+
+@router.callback_query(F.data.startswith('chain'), StateFilter(CoinState.chain))
+async def add_or_update_coin(query: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    address = data['coin_address']
+    chain = query.data.split('_')[1]
+
+    if coin_id := data.get('coin_id'):
         try:
-            await ClientCoin.objects.filter(
+            coin = await Coin.objects.update_client_coin(
+                address,
+                chain,
+                client_id=query.message.chat.id,
                 coin_id=coin_id,
-                client_id=msg.chat.id,
-            ).aupdate(
-                coin=coin,
             )
         except IntegrityError:
-            await msg.answer('Такая монета уже добавлена')
+            await state.clear()
+            await query.message.edit_text(
+                'Такая монета уже добавлена',
+                reply_markup=None,
+            )
             return
     else:
         try:
-            coin = await Coin.objects.add_to_client(msg.text, msg.chat.id)
+            coin = await Coin.objects.add_to_client(
+                address,
+                chain,
+                query.message.chat.id,
+            )
         except IntegrityError:
-            await msg.answer('Такая монета уже добавлена')
+            await state.clear()
+            await query.message.edit_text(
+                'Такая монета уже добавлена',
+                reply_markup=None,
+            )
             return
 
-    await state.set_state(None)
-    await msg.answer(f'Монета {coin.name} добавлена')
+    await state.clear()
+    await query.message.edit_text(
+        f'Монета {coin.name} добавлена',
+        reply_markup=None,
+    )
 
 
 @router.message(Command('edit_coin'))
@@ -73,9 +92,29 @@ async def coins_list(msg: Message, state: FSMContext):
     )
 
 
+@router.callback_query(F.data.in_(('coins_previous', 'coins_next')))
+async def change_coin_page(query: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    page = data.get('page', 1)
+
+    if query.data == 'coins_previous':
+        page -= 1
+    else:
+        page += 1
+
+    await state.update_data(page=page)
+    await query.message.edit_text(
+        'Монеты, которые вы отслеживаете',
+        reply_markup=await get_coins_list_keyboard(
+            query.message.chat.id,
+            page=page,
+        ),
+    )
+
+
 @router.callback_query(F.data == 'coins_list')
 async def to_coins_list(query: CallbackQuery, state: FSMContext):
-    await state.update_data(coin_id=None)
+    await state.update_data(coin_id=None, coin_address=None)
     await query.message.edit_text(
         'Монеты, которые вы отслеживаете',
         reply_markup=await get_coins_list_keyboard(query.message.chat.id),
@@ -95,20 +134,23 @@ async def coin_detail(query: CallbackQuery, state: FSMContext):
     else:
         tracking_param = 'Нет'
 
-    await state.update_data(coin_id=coin.pk)
+    await state.update_data(coin_id=coin.pk, coin_address=coin.address)
     await query.message.edit_text(
         f'Монета {coin.symbol} ({coin.name})\n'
+        f'Адрес: {coin.address}\n\n'
         f'Параметр отслеживания: {tracking_param}\n'
-        f'Отслеживаемая цена: {client_coin.tracking_price or "Нет"}\n'
-        f'Адрес: {coin.address}',
+        f'Отслеживаемая цена: {client_coin.tracking_price or "Нет"}',
         reply_markup=coin_kb,
     )
 
 
 @router.callback_query(F.data == 'edit_coin')
 async def edit_coin(query: CallbackQuery, state: FSMContext):
-    await state.set_state(CoinState.address)
-    await query.message.answer('Введите адрес монеты')
+    await state.set_state(CoinState.chain)
+    await query.message.answer(
+        'Выберите блокчейн монеты',
+        reply_markup=chains_kb,
+    )
 
 
 @router.callback_query(F.data == 'delete_coin')
@@ -118,7 +160,7 @@ async def delete_coin(query: CallbackQuery, state: FSMContext):
         client_id=query.message.chat.id,
     ).adelete()
 
-    await state.update_data(coin_id=None)
+    await state.update_data(coin_id=None, coin_address=None)
     await query.message.edit_text(
         'Монеты, которые вы отслеживаете',
         reply_markup=await get_coins_list_keyboard(query.message.chat.id),
