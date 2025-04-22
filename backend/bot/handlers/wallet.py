@@ -4,7 +4,12 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from django.db import IntegrityError
 
-from bot.keyboards.inline import get_wallets_list_keyboard, wallet_kb, chains_kb
+from bot.exceptions import WalletNotFound
+from bot.keyboards.inline import (
+    chains_kb,
+    get_wallets_list_keyboard,
+    wallet_kb,
+)
 from bot.states import WalletState
 from core.models import ClientWallet, Wallet
 
@@ -34,48 +39,42 @@ async def set_wallet_address(msg: Message, state: FSMContext):
     await msg.answer('Выберите блокчейн кошелька', reply_markup=chains_kb)
 
 
-@router.callback_query(F.data.startswith('chain'), StateFilter(WalletState.chain))
+@router.callback_query(
+    F.data.startswith('chain'),
+    StateFilter(WalletState.chain),
+)
 async def add_or_update_wallet(query: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     address = data['wallet_address']
     chain = query.data.split('_')[1]
 
-    if wallet_id := data.get('wallet_id'):
-        wallet, _ = await Wallet.objects.aget_or_create(address=address, chain=chain)
-        try:
+    try:
+        if wallet_id := data.get('wallet_id'):
+            wallet, _ = await Wallet.objects.aget_or_create(
+                address=address,
+                chain=chain,
+            )
             await ClientWallet.objects.filter(
                 wallet_id=wallet_id,
                 client_id=query.message.chat.id,
             ).aupdate(
                 wallet=wallet,
             )
-        except IntegrityError:
-            await state.clear()
-            await query.message.edit_text(
-                'Такой кошелёк уже добавлен',
-                reply_markup=None,
-            )
-            return
-    else:
-        try:
+        else:
             wallet = await Wallet.objects.add_to_client(
                 address,
                 chain,
                 query.message.chat.id,
             )
-        except IntegrityError:
-            await state.clear()
-            await query.message.edit_text(
-                'Такой кошелёк уже добавлен',
-                reply_markup=None,
-            )
-            return
+    except IntegrityError:
+        text = 'Такой кошелёк уже добавлен'
+    except WalletNotFound:
+        text = 'Такого кошелька не существует'
+    else:
+        text = f'Кошелёк {wallet.address} ({wallet.chain}) добавлен'
 
     await state.clear()
-    await query.message.edit_text(
-        f'Кошелёк {wallet.address} ({wallet.chain}) добавлен',
-        reply_markup=None,
-    )
+    await query.message.edit_text(text, reply_markup=None)
 
 
 @router.message(Command('edit_wallet'))

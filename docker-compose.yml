@@ -57,18 +57,6 @@ services:
     depends_on:
       - django
 
-  celery-beat:
-    build:
-      context: backend
-    restart: always
-    command: celery -A backend beat -l info --logfile /app/logs/celery.log
-    volumes:
-      - ./backend:/app
-    env_file:
-      - .env
-    depends_on:
-      - django
-
   nginx:
     build:
       context: nginx

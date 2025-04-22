@@ -1,6 +1,5 @@
 from pathlib import Path
 
-from celery.schedules import crontab
 from environs import Env
 
 env = Env()
@@ -17,7 +16,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env('DEBUG')
+DEBUG = env.bool('DEBUG')
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
 
@@ -189,14 +188,3 @@ CELERY_BROKER_URL = env('CELERY_BROKER_URL')
 CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND')
 
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = False
-
-# CELERY_BEAT_SCHEDULE = {
-#     'notify_wallet_buying': {
-#         'task': 'core.tasks.notify_wallet_buying',
-#         'schedule': crontab('*/1'),
-#     },
-#     'notify_coin_price_changes': {
-#         'task': 'core.tasks.notify_coin_price_changes',
-#         'schedule': crontab('*/1'),
-#     },
-# }

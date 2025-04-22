@@ -6,6 +6,7 @@ from aiogram.enums import ChatType
 from aiogram.types import BotCommand
 
 from bot.loader import bot, dp, logger, loop
+from bot.notify import notify
 
 
 async def main():
@@ -52,6 +53,7 @@ async def main():
     )
 
     logger.info('Starting bot...')
+    loop.create_task(notify())
     await dp.start_polling(bot)
 
 

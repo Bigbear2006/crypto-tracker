@@ -1,18 +1,20 @@
-from aiogram import F, Router, flags
+from aiogram import F, Router
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import Command, CommandObject, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from django.db import IntegrityError
 
+from bot.exceptions import CoinNotFound
 from bot.keyboards.inline import (
+    chains_kb,
     coin_kb,
     get_coin_tracking_params_kb,
     get_coins_list_keyboard,
-    one_button_keyboard, chains_kb,
 )
+from bot.keyboards.utils import one_button_keyboard
 from bot.states import CoinState
-from core.models import Client, ClientCoin, Coin, CoinTrackingParams
+from core.models import ClientCoin, Coin, CoinTrackingParams
 
 router = Router()
 
@@ -40,47 +42,38 @@ async def set_coin_address(msg: Message, state: FSMContext):
     await msg.answer('Выберите блокчейн монеты', reply_markup=chains_kb)
 
 
-@router.callback_query(F.data.startswith('chain'), StateFilter(CoinState.chain))
+@router.callback_query(
+    F.data.startswith('chain'),
+    StateFilter(CoinState.chain),
+)
 async def add_or_update_coin(query: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     address = data['coin_address']
     chain = query.data.split('_')[1]
 
-    if coin_id := data.get('coin_id'):
-        try:
+    try:
+        if coin_id := data.get('coin_id'):
             coin = await Coin.objects.update_client_coin(
                 address,
                 chain,
                 client_id=query.message.chat.id,
                 coin_id=coin_id,
             )
-        except IntegrityError:
-            await state.clear()
-            await query.message.edit_text(
-                'Такая монета уже добавлена',
-                reply_markup=None,
-            )
-            return
-    else:
-        try:
+        else:
             coin = await Coin.objects.add_to_client(
                 address,
                 chain,
                 query.message.chat.id,
             )
-        except IntegrityError:
-            await state.clear()
-            await query.message.edit_text(
-                'Такая монета уже добавлена',
-                reply_markup=None,
-            )
-            return
+    except IntegrityError:
+        text = 'Такая монета уже добавлена'
+    except CoinNotFound:
+        text = 'Такой монеты не существует'
+    else:
+        text = f'Монета {coin.name} добавлена'
 
     await state.clear()
-    await query.message.edit_text(
-        f'Монета {coin.name} добавлена',
-        reply_markup=None,
-    )
+    await query.message.edit_text(text, reply_markup=None)
 
 
 @router.message(Command('edit_coin'))
