@@ -1,8 +1,7 @@
-import json
-
 from aiohttp import ClientSession
 
 from bot.exceptions import CoinNotFound
+from bot.loader import logger
 from bot.schemas import CoinInfo
 
 
@@ -28,7 +27,7 @@ class DexscreenerAPI:
             f'tokens/v1/{chain}/{",".join(addresses)}',
         ) as rsp:
             data = await rsp.json()
-            print(json.dumps(data, indent=2))
+            logger.debug(data)
             return [
                 CoinInfo(
                     address=i['baseToken']['address'],

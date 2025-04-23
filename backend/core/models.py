@@ -8,6 +8,7 @@ from django.db import models
 from bot.api.dexscreener import DexscreenerAPI
 from bot.api.solana import SolanaAPI
 from bot.exceptions import WalletNotFound
+from bot.loader import logger
 
 
 class ClientManager(models.Manager):
@@ -43,8 +44,9 @@ class ClientManager(models.Manager):
 
 class WalletManager(models.Manager):
     async def acreate(self, **kwargs):
-        async with SolanaAPI as api:
+        async with SolanaAPI() as api:
             address = kwargs.get('address', '')
+            logger.info(address)
             if not await api.get_signatures(address):
                 raise WalletNotFound(address=address)
         return await super().acreate(**kwargs)
@@ -55,7 +57,11 @@ class WalletManager(models.Manager):
         chain: str,
         client_id: int,
     ) -> 'Wallet':
-        wallet, _ = await self.aget_or_create(address=address, chain=chain)
+        try:
+            wallet = await self.aget(address=address, chain=chain)
+        except ObjectDoesNotExist:
+            wallet = await self.acreate(address=address, chain=chain)
+
         await ClientWallet.objects.acreate(
             client_id=client_id,
             wallet=wallet,
@@ -64,21 +70,28 @@ class WalletManager(models.Manager):
 
 
 class CoinManager(models.Manager):
+    async def aget_or_create(self, address: str, chain: str) -> 'Coin':
+        try:
+            coin = await self.aget(address=address, chain=chain)
+        except ObjectDoesNotExist:
+            async with DexscreenerAPI() as api:
+                coin_info = await api.get_coin_info(chain, address)
+                coin = await self.acreate(
+                    address=address,
+                    chain=chain,
+                    name=coin_info.name,
+                    symbol=coin_info.symbol,
+                    logo=coin_info.logo,
+                )
+        return coin
+
     async def add_to_client(
         self,
         address: str,
         chain: str,
         client_id: int,
     ) -> 'Coin':
-        try:
-            coin = await self.aget(address=address, chain=chain)
-        except ObjectDoesNotExist:
-            async with DexscreenerAPI as api:
-                coin = await self.acreate(
-                    chain=chain,
-                    **asdict(await api.get_coin_info(chain, address)),
-                )
-
+        coin = await self.aget_or_create(address, chain)
         await ClientCoin.objects.acreate(
             client_id=client_id,
             coin=coin,
@@ -93,15 +106,7 @@ class CoinManager(models.Manager):
         client_id: int,
         coin_id: int,
     ) -> 'Coin':
-        try:
-            coin = await self.aget(address=address, chain=chain)
-        except ObjectDoesNotExist:
-            async with DexscreenerAPI as api:
-                coin = await self.acreate(
-                    chain=chain,
-                    **asdict(await api.get_coin_info(address, chain)),
-                )
-
+        coin = await self.aget_or_create(address, chain)
         await ClientCoin.objects.filter(
             client_id=client_id,
             coin_id=coin_id,

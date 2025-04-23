@@ -1,8 +1,10 @@
 import asyncio
+from asyncio import ALL_COMPLETED
 from collections.abc import Iterator
 from itertools import groupby
 
 from aiogram.exceptions import TelegramBadRequest, TelegramRetryAfter
+from aiohttp import TCPConnector
 from asgiref.sync import sync_to_async
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.db.models import QuerySet
@@ -44,14 +46,20 @@ def chunk_list(lst: list, size: int) -> list:
     return [lst[i : i + size] for i in range(0, len(lst), size)]
 
 
+async def asyncio_wait(fs, *, timeout=None, return_when=ALL_COMPLETED) -> tuple[set, set]:
+    if not fs:
+        return set(), set()
+    return await asyncio.wait(fs, timeout=timeout, return_when=return_when)
+
+
 async def send_coin_message(clients: QuerySet, coin_info: CoinInfo):
     text = (
         f'Монета {coin_info.symbol}\n'
-        f'Изменение цены за 5 минут ({coin_info.price_5m_percents}%):\n'
+        f'Изменение цены за 5 минут ({coin_info.price_5m_percents or 0}%):\n'
         f'{coin_info.price_5m} -> {coin_info.price}'
     )
 
-    await asyncio.wait(
+    await asyncio_wait(
         [
             asyncio.create_task(safe_send_message(c.pk, text))
             async for c in clients
@@ -66,11 +74,12 @@ async def notify_coins_prices_changes():
             f'with {len(addresses)} addresses on chain {chain}...',
         )
         addresses = chunk_list(addresses, 30)
-        await asyncio.wait(
+        logger.info(addresses)
+        await asyncio_wait(
             [
                 asyncio.create_task(
                     send_coin_message(
-                        Client.objects.filter(
+                        Client.objects.all(
                             coins__coin__address=coin.address,
                             coins__tracking_param=CoinTrackingParams.PRICE_UP
                             if coin.price_5m_percents > 0
@@ -90,7 +99,7 @@ async def notify_coins_prices_changes():
         )
 
     async with DexscreenerAPI() as api:
-        await asyncio.wait(
+        await asyncio_wait(
             [
                 asyncio.create_task(_notify(api, **coin))
                 async for coin in Coin.objects.values('chain').annotate(
@@ -105,13 +114,13 @@ async def get_wallet_new_transactions(
     wallet: Wallet,
 ) -> list[Transaction]:
     transactions = await api.get_signatures(wallet.address)
-    already_sent_transactions = await sync_to_async(
-        lambda: TxHash.objects.filter(
+    already_sent_transactions = await sync_to_async(list)(
+        TxHash.objects.filter(
             tx_hash__in=transactions,
         ).values_list('tx_hash', flat=True),
-    )()
+    )
 
-    done, _ = await asyncio.wait(
+    done, _ = await asyncio_wait(
         [
             asyncio.create_task(api.get_transaction(wallet.address, tx))
             for tx in transactions
@@ -127,11 +136,17 @@ async def filter_wallet_transactions(
     tx_list: Iterator[Transaction],
 ) -> list[tuple[Transaction, CoinInfo]]:
     info = await api.get_coins_info('solana', [token_address])
+    logger.info(info)
+
+    await TxHash.objects.abulk_create(
+        [TxHash(tx_hash=tx.signature) for tx in tx_list],
+    )
 
     if not info:
         return []
 
     coin_info = info[0]
+    logger.info([tx for tx in tx_list])
     return [
         (tx, coin_info)
         for tx in tx_list
@@ -153,7 +168,7 @@ async def send_wallet_transaction(tx: Transaction, coin_info: CoinInfo) -> str:
         f'Общая сумма: {tx.token_amount * coin_info.price} USD'
     )
     wallet = await Wallet.objects.aget(address=tx.wallet_address)
-    await asyncio.wait(
+    await asyncio_wait(
         [
             asyncio.create_task(safe_send_message(c.pk, text))
             async for c in Client.objects.filter(
@@ -167,39 +182,39 @@ async def send_wallet_transaction(tx: Transaction, coin_info: CoinInfo) -> str:
 
 async def notify_wallets_transactions():
     logger.info('Starting notify_wallets_transactions...')
-    async with SolanaAPI() as api:
-        done, _ = await asyncio.wait(
+    async with SolanaAPI(connector=TCPConnector(limit_per_host=2)) as api:
+        done, _ = await asyncio_wait(
             [
                 asyncio.create_task(get_wallet_new_transactions(api, w))
                 async for w in Wallet.objects.all()
             ],
         )
-        transactions = [tx for i in done for tx in i.result()]
+        transactions = [tx for i in done for tx in i.result() if tx is not None]
 
     async with DexscreenerAPI() as api:
-        transactions = sorted(transactions, key=lambda t: t.address)
-        done, _ = await asyncio.wait(
+        transactions = sorted(transactions, key=lambda t: t.wallet_address)
+        done, _ = await asyncio_wait(
             [
                 asyncio.create_task(
                     filter_wallet_transactions(api, address, tx_list),
                 )
                 for address, tx_list in groupby(
                     transactions,
-                    lambda t: t.address,
+                    lambda t: t.wallet_address,
                 )
             ],
         )
+        done = [j for i in done for j in i.result()]
 
-    done, _ = await asyncio.wait(
-        [
-            asyncio.create_task(send_wallet_transaction(*i.result()))
-            for i in done
-        ],
-    )
-
-    await TxHash.objects.abulk_create(
-        [TxHash(tx_hash=i.result()) for i in done],
-    )
+    if done:
+        await asyncio_wait(
+            [
+                asyncio.create_task(send_wallet_transaction(*i.result()))
+                for i in done
+            ],
+        )
+    else:
+        logger.info("There are no new wallets transactions")
 
 
 async def notify():

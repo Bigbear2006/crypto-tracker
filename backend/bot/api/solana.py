@@ -1,7 +1,8 @@
-import json
+import asyncio
 
 from aiohttp import ClientSession
 
+from bot.loader import logger
 from bot.schemas import Transaction
 
 
@@ -22,7 +23,7 @@ class SolanaAPI:
         self,
         address: str,
         *,
-        limit: int = 10,
+        limit: int = 5,
     ) -> list[str]:
         async with self.session.post(
             '',
@@ -37,18 +38,30 @@ class SolanaAPI:
             },
         ) as rsp:
             data = await rsp.json()
-            print(json.dumps(data, indent=2))
+            logger.debug(data)
+
+            if rsp.status == 429:
+                retry_after = int(rsp.headers['Retry-After'])
+                logger.debug(f'Sleep {retry_after} seconds...')
+                await asyncio.sleep(retry_after)
+                await self.get_signatures(address, limit=limit)
+
+            if err := data.get('error'):
+                logger.info(f'Error {err}')
+                return []
+
             return [
                 i['signature']
                 for i in data['result']
                 if i['confirmationStatus'] == 'finalized'
+                if i['blockTime'] > 1745392842  # skip old transactions
             ]
 
     async def get_transaction(
         self,
         wallet_address: str,
         signature: str,
-    ) -> Transaction:
+    ) -> Transaction | None:
         async with self.session.post(
             '',
             json={
@@ -61,20 +74,33 @@ class SolanaAPI:
             },
         ) as rsp:
             data = await rsp.json()
-            print(json.dumps(data, indent=2))
-            meta = data['result']['meta']
+            logger.debug(data)
 
-            pre_token_balance = [
-                i['owner']
-                for i in meta['preTokenBalances']
-                if i['owner'] == wallet_address
-            ][0]
+            if rsp.status == 429:
+                retry_after = int(rsp.headers['Retry-After'])
+                logger.debug(f'Sleep {retry_after} seconds...')
+                await asyncio.sleep(retry_after)
+                await self.get_transaction(wallet_address, signature)
 
-            post_token_balance = [
-                i['owner']
-                for i in meta['postTokenBalances']
-                if i['owner'] == wallet_address
-            ][0]
+            if err := data.get('error'):
+                logger.info(f'Error {err}')
+                return
+
+            try:
+                meta = data['result']['meta']
+                pre_token_balance = [
+                    i
+                    for i in meta['preTokenBalances']
+                    if i['owner'] == wallet_address
+                ][0]
+
+                post_token_balance = [
+                    i
+                    for i in meta['postTokenBalances']
+                    if i['owner'] == wallet_address
+                ][0]
+            except IndexError:
+                return
 
             token_amount = (
                 post_token_balance['uiTokenAmount']['uiAmount']

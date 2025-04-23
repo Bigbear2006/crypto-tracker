@@ -13,6 +13,8 @@ class CoinInfo:
 
     @property
     def price_5m(self):
+        if self.price_5m_percents is None:
+            return self.price
         return self.price + self.price * self.price_5m_percents
 
 

@@ -6,7 +6,6 @@ from aiogram.enums import ChatType
 from aiogram.types import BotCommand
 
 from bot.loader import bot, dp, logger, loop
-from bot.notify import notify
 
 
 async def main():
@@ -15,6 +14,7 @@ async def main():
 
     from bot.handlers import alerts, coin, commands, wallet
     from bot.middlewares import WithClientMiddleware
+    from bot.notify import notify
 
     dp.include_routers(
         commands.router,
