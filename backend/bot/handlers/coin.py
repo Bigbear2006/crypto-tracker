@@ -188,7 +188,10 @@ async def set_coin_tracking_params(query: CallbackQuery, state: FSMContext):
 async def set_coin_tracking_price(query: CallbackQuery, state: FSMContext):
     await state.set_state(CoinState.tracking_price)
     await query.message.answer(
-        'Введите цену, которую вы хотите отслеживать.\nПример: 1.02',
+        'Введите цену, которую вы хотите отслеживать.\n'
+        'Бот уведомит вас, когда цена монеты поднимется или опустится '
+        '(в зависимости от параметра отслеживания) до этого значения\n'
+        'Пример: 1.02',
     )
 
 
@@ -206,6 +209,7 @@ async def set_coin_tracking_price_2(msg: Message, state: FSMContext):
         client_id=msg.chat.id,
     ).aupdate(
         tracking_price=tracking_price,
+        notification_sent=False,
     )
 
     await msg.answer(

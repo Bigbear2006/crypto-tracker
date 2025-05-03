@@ -35,7 +35,7 @@ async def main():
             ),
             BotCommand(
                 command='/edit_wallet',
-                description='Редактировать отслеживаемый кошелек',
+                description='Редактировать отслеживаемые кошельки',
             ),
             BotCommand(
                 command='/add_coin',
@@ -43,17 +43,17 @@ async def main():
             ),
             BotCommand(
                 command='/edit_coin',
-                description='Редактирование отслеживаемой монеты',
+                description='Редактировать отслеживаемые монеты',
             ),
             BotCommand(
                 command='/toggle_alerts',
-                description='Вкл/выкл. оповещения',
+                description='Вкл/выкл оповещения',
             ),
         ],
     )
 
     logger.info('Starting bot...')
-    loop.create_task(notify())
+    # loop.create_task(notify())
     await dp.start_polling(bot)
 
 

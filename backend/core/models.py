@@ -1,14 +1,12 @@
-from dataclasses import asdict
-
 from aiogram import types
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 
+from bot.api.alchemy import AlchemyAPI, alchemy_chains
 from bot.api.dexscreener import DexscreenerAPI
-from bot.api.solana import SolanaAPI
 from bot.exceptions import WalletNotFound
-from bot.loader import logger
+from core.choices import CoinTrackingParams
 
 
 class ClientManager(models.Manager):
@@ -44,9 +42,8 @@ class ClientManager(models.Manager):
 
 class WalletManager(models.Manager):
     async def acreate(self, **kwargs):
-        async with SolanaAPI() as api:
+        async with AlchemyAPI() as api:
             address = kwargs.get('address', '')
-            logger.info(address)
             if not await api.get_signatures(address):
                 raise WalletNotFound(address=address)
         return await super().acreate(**kwargs)
@@ -72,13 +69,16 @@ class WalletManager(models.Manager):
 class CoinManager(models.Manager):
     async def aget_or_create(self, address: str, chain: str) -> 'Coin':
         try:
-            coin = await self.aget(address=address, chain=chain)
+            coin = await self.aget(
+                address=address,
+                chain=alchemy_chains[chain],
+            )
         except ObjectDoesNotExist:
             async with DexscreenerAPI() as api:
                 coin_info = await api.get_coin_info(chain, address)
                 coin = await self.acreate(
                     address=address,
-                    chain=chain,
+                    chain=alchemy_chains[chain],
                     name=coin_info.name,
                     symbol=coin_info.symbol,
                     logo=coin_info.logo,
@@ -169,7 +169,7 @@ class Wallet(models.Model):
         ordering = ['address']
 
     def __str__(self):
-        return f'{self.address[:10]}... ({self.chain})'
+        return f'{self.address[:20]}...'
 
 
 class Coin(models.Model):
@@ -197,11 +197,12 @@ class ClientWallet(models.Model):
 
     class Meta:
         unique_together = ('client', 'wallet')
+        verbose_name = 'Отслеживаемый кошелёк'
+        verbose_name_plural = 'Отслеживаемые кошельки'
+        ordering = ['-created_at']
 
-
-class CoinTrackingParams(models.TextChoices):
-    PRICE_UP = 'price_up', 'Цена повышается'
-    PRICE_DOWN = 'price_down', 'Цена понижается'
+    def __str__(self):
+        return f'{self.client} - {self.wallet}'
 
 
 class ClientCoin(models.Model):
@@ -218,17 +219,46 @@ class ClientCoin(models.Model):
         null=True,
         blank=True,
     )
+    notification_sent = models.BooleanField(
+        'Уведомление отправлено',
+        default=False,
+    )
     created_at = models.DateTimeField('Дата создания', auto_now_add=True)
-
-    objects: models.Manager
 
     class Meta:
         unique_together = ('client', 'coin')
-
-
-class TxHash(models.Model):
-    tx_hash = models.TextField()
-    objects: models.Manager
+        verbose_name = 'Отслеживаемая монета'
+        verbose_name_plural = 'Отслеживаемые монеты'
+        ordering = ['-created_at']
 
     def __str__(self):
-        return self.tx_hash[:50]
+        return f'{self.client} - {self.coin}'
+
+
+class Transaction(models.Model):
+    wallet = models.ForeignKey(
+        Wallet,
+        models.CASCADE,
+        'transactions',
+        verbose_name='Кошелёк',
+    )
+    coin = models.ForeignKey(
+        Coin,
+        models.CASCADE,
+        'transactions',
+        verbose_name='Монета',
+    )
+    coin_amount = models.FloatField('Количество токенов')
+    coin_price = models.FloatField('Цена токена')
+    total_cost = models.FloatField('Общая сумма')
+    date = models.DateTimeField('Дата', max_length=255)
+    signature = models.CharField('Адрес транзакции', max_length=255)
+    sent = models.BooleanField('Отправлена', default=False)
+
+    def __str__(self):
+        return f'{self.wallet} - {self.coin}'
+
+    class Meta:
+        verbose_name = 'Транзакция'
+        verbose_name_plural = 'Транзакции'
+        ordering = ['-date']

@@ -1,22 +1,14 @@
-from aiohttp import ClientSession
-
+from bot.api.base import APIClient
 from bot.exceptions import CoinNotFound
-from bot.loader import logger
 from bot.schemas import CoinInfo
 
 
-class DexscreenerAPI:
+class DexscreenerAPI(APIClient):
     def __init__(self, **session_kwargs):
-        self.session = ClientSession(
+        super().__init__(
             'https://api.dexscreener.com/',
             **session_kwargs,
         )
-
-    async def __aenter__(self):
-        return self
-
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        await self.session.close()
 
     async def get_coins_info(
         self,
@@ -27,7 +19,6 @@ class DexscreenerAPI:
             f'tokens/v1/{chain}/{",".join(addresses)}',
         ) as rsp:
             data = await rsp.json()
-            logger.debug(data)
             return [
                 CoinInfo(
                     address=i['baseToken']['address'],

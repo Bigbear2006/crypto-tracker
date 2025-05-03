@@ -16,4 +16,13 @@ async def start(msg: Message, client: Client, client_created: bool):
     else:
         logger.info(f'Client {client} id={client.pk} was updated')
 
-    await msg.answer(f'Привет, {msg.from_user.full_name}!')
+    await msg.answer(
+        f'Привет, {msg.from_user.full_name}!\n\n'
+        f'Выбери одну из команд:\n'
+        '/start - Запустить бота\n'
+        '/add_wallet - Добавить кошелек для отслеживания\n'
+        '/edit_wallet - Редактировать отслеживаемые кошельки\n'
+        '/add_coin - Добавить монету для отслеживания\n'
+        '/edit_coin - Редактировать отслеживаемые монеты\n'
+        '/toggle_alerts - Вкл/выкл оповещения',
+    )

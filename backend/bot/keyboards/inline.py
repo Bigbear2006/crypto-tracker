@@ -76,14 +76,24 @@ alerts_kb = InlineKeyboardMarkup(
 chains_kb = InlineKeyboardMarkup(
     inline_keyboard=[
         [
-            InlineKeyboardButton(text='SOL', callback_data='chain_solana'),
-            InlineKeyboardButton(text='ETH', callback_data='chain_ethereum'),
-            InlineKeyboardButton(text='Base', callback_data='chain_base'),
+            InlineKeyboardButton(
+                text='SOL',
+                callback_data='chain_solana',
+            ),
+            InlineKeyboardButton(
+                text='ETH',
+                callback_data='chain_ethereum',
+            ),
         ],
         [
-            InlineKeyboardButton(text='BSC', callback_data='chain_bsc'),
-            InlineKeyboardButton(text='Tron', callback_data='chain_tron'),
-            InlineKeyboardButton(text='Blast', callback_data='chain_blast'),
+            InlineKeyboardButton(
+                text='Base',
+                callback_data='chain_base',
+            ),
+            InlineKeyboardButton(
+                text='Blast',
+                callback_data='chain_blast',
+            ),
         ],
     ],
 )
