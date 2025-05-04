@@ -5,6 +5,7 @@ from datetime import timedelta
 from django.utils.timezone import now
 
 from bot.api.base import APIClient
+from bot.exceptions import CoinNotFound
 from bot.loader import logger
 from bot.schemas import (
     CoinHistory,
@@ -186,6 +187,12 @@ class AlchemyAPI(APIClient):
             for i in data['data']
             if i.get('prices')
         ]
+
+    async def get_coin_price(self, chain: str, address: str) -> CoinPrice:
+        coins = await self.get_coins_prices([CoinInputData(chain, address)])
+        if not coins:
+            raise CoinNotFound(address=address)
+        return coins[0]
 
 
 alchemy_chains = {

@@ -48,6 +48,12 @@ class WalletManager(models.Manager):
                 raise WalletNotFound(address=address)
         return await super().acreate(**kwargs)
 
+    async def aget_or_create(self, address: str, chain: str):
+        try:
+            return await self.aget(address=address, chain=chain), False
+        except ObjectDoesNotExist:
+            return await self.acreate(address=address, chain=chain), True
+
     async def add_to_client(
         self,
         address: str,
@@ -64,6 +70,11 @@ class WalletManager(models.Manager):
             wallet=wallet,
         )
         return wallet
+
+    def get_tracked(self):
+        return self.annotate(clients_count=models.Count('clients')).filter(
+            clients_count__gt=0,
+        )
 
 
 class CoinManager(models.Manager):
@@ -114,6 +125,11 @@ class CoinManager(models.Manager):
             coin=coin,
         )
         return coin
+
+    def get_tracked(self):
+        return self.annotate(clients_count=models.Count('clients')).filter(
+            clients_count__gt=0,
+        )
 
 
 class User(AbstractUser):
@@ -190,14 +206,23 @@ class Coin(models.Model):
 
 
 class ClientWallet(models.Model):
-    client = models.ForeignKey(Client, models.CASCADE, 'wallets')
-    wallet = models.ForeignKey(Wallet, models.CASCADE, 'clients')
+    client = models.ForeignKey(
+        Client,
+        models.CASCADE,
+        'wallets',
+        verbose_name='Пользователь',
+    )
+    wallet = models.ForeignKey(
+        Wallet,
+        models.CASCADE,
+        'clients',
+        verbose_name='Кошелек',
+    )
     created_at = models.DateTimeField('Дата создания', auto_now_add=True)
-    objects: models.Manager
 
     class Meta:
         unique_together = ('client', 'wallet')
-        verbose_name = 'Отслеживаемый кошелёк'
+        verbose_name = 'Отслеживаемый кошелек'
         verbose_name_plural = 'Отслеживаемые кошельки'
         ordering = ['-created_at']
 
@@ -206,8 +231,18 @@ class ClientWallet(models.Model):
 
 
 class ClientCoin(models.Model):
-    client = models.ForeignKey(Client, models.CASCADE, 'coins')
-    coin = models.ForeignKey(Coin, models.CASCADE, 'clients')
+    client = models.ForeignKey(
+        Client,
+        models.CASCADE,
+        'coins',
+        verbose_name='Пользователь',
+    )
+    coin = models.ForeignKey(
+        Coin,
+        models.CASCADE,
+        'clients',
+        verbose_name='Монета',
+    )
     tracking_param = models.CharField(
         'Параметр отслеживания',
         max_length=100,
@@ -238,24 +273,42 @@ class ClientCoin(models.Model):
 class Transaction(models.Model):
     wallet = models.ForeignKey(
         Wallet,
-        models.CASCADE,
+        models.SET_NULL,
         'transactions',
         verbose_name='Кошелёк',
+        null=True,
+        blank=True,
     )
     coin = models.ForeignKey(
         Coin,
-        models.CASCADE,
+        models.SET_NULL,
         'transactions',
         verbose_name='Монета',
+        null=True,
+        blank=True,
     )
-    coin_amount = models.FloatField('Количество токенов')
-    coin_price = models.FloatField('Цена токена')
-    total_cost = models.FloatField('Общая сумма')
-    date = models.DateTimeField('Дата', max_length=255)
+    coin_amount = models.FloatField(
+        'Количество монет',
+        null=True,
+        blank=True,
+    )
+    coin_price = models.FloatField(
+        'Цена токена',
+        null=True,
+        blank=True,
+    )
+    total_cost = models.FloatField(
+        'Общая сумма',
+        null=True,
+        blank=True,
+    )
+    date = models.DateTimeField('Дата', max_length=255, null=True, blank=True)
     signature = models.CharField('Адрес транзакции', max_length=255)
     sent = models.BooleanField('Отправлена', default=False)
 
     def __str__(self):
+        if not self.wallet or not self.coin:
+            return self.signature
         return f'{self.wallet} - {self.coin}'
 
     class Meta:

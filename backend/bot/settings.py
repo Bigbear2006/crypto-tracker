@@ -18,9 +18,7 @@ class Settings:
     MIN_COIN_MARKET_CAP: int = field(default=100_000)
     MAX_COIN_PRICE: int = field(default=0.00018)
 
-    NOTIFY_COINS_TIMEOUT: int = field(default=3 * 60)
-    NOTIFY_WALLETS_TIMEOUT: int = field(default=3 * 60)
-
+    NOTIFY_TIMEOUT: int = field(default=10)
     PAGE_SIZE: int = field(default=5)
 
 

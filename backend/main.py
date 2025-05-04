@@ -12,12 +12,11 @@ async def main():
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
     django.setup()
 
-    from bot.handlers import alerts, coin, commands, wallet
+    from bot.handlers import alerts, base, coin, wallet
     from bot.middlewares import WithClientMiddleware
-    from bot.notify import notify
 
     dp.include_routers(
-        commands.router,
+        base.router,
         wallet.router,
         coin.router,
         alerts.router,

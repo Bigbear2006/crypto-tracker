@@ -1,6 +1,7 @@
-from aiogram import Router, flags
+from aiogram import F, Router, flags
 from aiogram.filters import Command
-from aiogram.types import Message
+from aiogram.fsm.context import FSMContext
+from aiogram.types import CallbackQuery, Message
 
 from bot.loader import logger
 from core.models import Client
@@ -26,3 +27,9 @@ async def start(msg: Message, client: Client, client_created: bool):
         '/edit_coin - Редактировать отслеживаемые монеты\n'
         '/toggle_alerts - Вкл/выкл оповещения',
     )
+
+
+@router.callback_query(F.data == 'cancel')
+async def cancel(query: CallbackQuery, state: FSMContext):
+    await state.clear()
+    await query.message.edit_text('Действие отменено')

@@ -4,6 +4,12 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from bot.keyboards.utils import get_paginated_keyboard
 from core.models import Coin, CoinTrackingParams, Wallet
 
+cancel_kb = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [InlineKeyboardButton(text='Отменить', callback_data='cancel')],
+    ],
+)
+
 wallet_kb = InlineKeyboardMarkup(
     inline_keyboard=[
         [

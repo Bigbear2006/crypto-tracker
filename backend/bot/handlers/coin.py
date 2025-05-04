@@ -1,13 +1,14 @@
 from aiogram import F, Router
 from aiogram.exceptions import TelegramBadRequest
-from aiogram.filters import Command, CommandObject, StateFilter
+from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from django.db import IntegrityError
 
+from bot.api.alchemy import AlchemyAPI
 from bot.exceptions import CoinNotFound
 from bot.keyboards.inline import (
-    chains_kb,
+    cancel_kb,
     coin_kb,
     get_coin_tracking_params_kb,
     get_coins_list_keyboard,
@@ -20,68 +21,60 @@ router = Router()
 
 
 @router.message(Command('add_coin'))
-async def add_coin(
-    msg: Message,
-    state: FSMContext,
-    command: CommandObject,
-):
-    if not command.args:
-        await state.set_state(CoinState.address)
-        await msg.answer('Введите адрес монеты')
-        return
-
-    await state.update_data(coin_address=command.args)
-    await state.set_state(CoinState.chain)
-    await msg.answer('Выберите блокчейн кошелька', reply_markup=chains_kb)
+async def add_coin(msg: Message, state: FSMContext):
+    await state.set_state(CoinState.address)
+    await msg.answer('Введите адрес монеты', reply_markup=cancel_kb)
 
 
 @router.message(F.text, StateFilter(CoinState.address))
-async def set_coin_address(msg: Message, state: FSMContext):
-    await state.update_data(coin_address=msg.text)
-    await state.set_state(CoinState.chain)
-    await msg.answer('Выберите блокчейн монеты', reply_markup=chains_kb)
-
-
-@router.callback_query(
-    F.data.startswith('chain'),
-    StateFilter(CoinState.chain),
-)
-async def add_or_update_coin(query: CallbackQuery, state: FSMContext):
-    data = await state.get_data()
-    address = data['coin_address']
-    chain = query.data.split('_')[1]
+async def add_or_update_coin(msg: Message, state: FSMContext):
+    address = msg.text
+    chain = 'solana'
 
     try:
-        if coin_id := data.get('coin_id'):
+        if coin_id := await state.get_value('coin_id'):
             coin = await Coin.objects.update_client_coin(
                 address,
                 chain,
-                client_id=query.message.chat.id,
+                client_id=msg.chat.id,
                 coin_id=coin_id,
             )
         else:
             coin = await Coin.objects.add_to_client(
                 address,
                 chain,
-                query.message.chat.id,
+                msg.chat.id,
             )
     except IntegrityError:
         text = 'Такая монета уже добавлена'
     except CoinNotFound:
         text = 'Такой монеты не существует'
     else:
-        text = f'Монета {coin.name} добавлена'
+        text = f'Монета {coin.symbol} ({coin.name}) добавлена'
 
     await state.clear()
-    await query.message.edit_text(text, reply_markup=None)
+    await msg.answer(
+        text,
+        reply_markup=one_button_keyboard(
+            text='К списку монет',
+            callback_data='coins_list',
+        ),
+    )
 
 
 @router.message(Command('edit_coin'))
-async def coins_list(msg: Message, state: FSMContext):
+@router.callback_query(F.data == 'coins_list')
+async def coins_list(msg: Message | CallbackQuery, state: FSMContext):
+    client_id = (
+        msg.chat.id if isinstance(msg, Message) else msg.message.chat.id
+    )
+    answer_func = (
+        msg.answer if isinstance(msg, Message) else msg.message.edit_text
+    )
     await state.update_data(coin_id=None)
-    await msg.answer(
-        'Монеты, которые вы отслеживаете',
-        reply_markup=await get_coins_list_keyboard(msg.chat.id),
+    await answer_func(
+        text='Монеты, которые вы отслеживаете',
+        reply_markup=await get_coins_list_keyboard(client_id),
     )
 
 
@@ -102,15 +95,6 @@ async def change_coin_page(query: CallbackQuery, state: FSMContext):
             query.message.chat.id,
             page=page,
         ),
-    )
-
-
-@router.callback_query(F.data == 'coins_list')
-async def to_coins_list(query: CallbackQuery, state: FSMContext):
-    await state.update_data(coin_id=None, coin_address=None)
-    await query.message.edit_text(
-        'Монеты, которые вы отслеживаете',
-        reply_markup=await get_coins_list_keyboard(query.message.chat.id),
     )
 
 
@@ -139,10 +123,10 @@ async def coin_detail(query: CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data == 'edit_coin')
 async def edit_coin(query: CallbackQuery, state: FSMContext):
-    await state.set_state(CoinState.chain)
+    await state.set_state(CoinState.address)
     await query.message.answer(
-        'Выберите блокчейн монеты',
-        reply_markup=chains_kb,
+        'Введите адрес монеты',
+        reply_markup=cancel_kb,
     )
 
 
@@ -188,10 +172,8 @@ async def set_coin_tracking_params(query: CallbackQuery, state: FSMContext):
 async def set_coin_tracking_price(query: CallbackQuery, state: FSMContext):
     await state.set_state(CoinState.tracking_price)
     await query.message.answer(
-        'Введите цену, которую вы хотите отслеживать.\n'
-        'Бот уведомит вас, когда цена монеты поднимется или опустится '
-        '(в зависимости от параметра отслеживания) до этого значения\n'
-        'Пример: 1.02',
+        'Введите цену для уведомления.\nПример: 1.02',
+        reply_markup=cancel_kb,
     )
 
 
@@ -200,23 +182,71 @@ async def set_coin_tracking_price_2(msg: Message, state: FSMContext):
     try:
         tracking_price = float(msg.text)
     except ValueError:
-        await msg.answer('Вы ввели некорректную цену, попробуйте еще раз')
+        await msg.answer(
+            'Вы ввели некорректную цену, попробуйте еще раз',
+            reply_markup=cancel_kb,
+        )
         return
 
-    coin_id = await state.get_value('coin_id')
+    tracking_param = ''
+    text = f'Теперь отслеживаемая цена этой монеты: {tracking_price}\n'
+    coin = await Coin.objects.aget(pk=await state.get_value('coin_id'))
+    client_coin = await ClientCoin.objects.aget(
+        coin=coin,
+        client_id=msg.chat.id,
+    )
+    async with AlchemyAPI() as api:
+        coin_price = await api.get_coin_price(coin.chain, coin.address)
+
+    if client_coin.tracking_param:
+        if (
+            client_coin.tracking_param == CoinTrackingParams.PRICE_UP
+            and tracking_price <= coin_price.price
+        ):
+            param_str = 'больше'
+        elif (
+            client_coin.tracking_param == CoinTrackingParams.PRICE_DOWN
+            and tracking_price >= coin_price.price
+        ):
+            param_str = 'меньше'
+        else:
+            param_str = None
+
+        if param_str:
+            await msg.answer(
+                f'Текущая цена монеты (${coin_price.price}) '
+                f'уже {param_str} или равна указанному значению'
+                f' (${tracking_price})\n'
+                f'Укажите другую цену или измените '
+                f'параметр отслеживания в настройках',
+                reply_markup=cancel_kb,
+            )
+            return
+    else:
+        tracking_param = (
+            CoinTrackingParams.PRICE_UP
+            if tracking_price > coin_price.price
+            else CoinTrackingParams.PRICE_DOWN
+        )
+        text += (
+            f'Автоматически установлен параметр отслеживания: '
+            f'{tracking_param.label}'
+        )
+
     await ClientCoin.objects.filter(
-        coin_id=coin_id,
+        coin=coin,
         client_id=msg.chat.id,
     ).aupdate(
         tracking_price=tracking_price,
         notification_sent=False,
+        **{'tracking_param': tracking_param} if tracking_param else {},
     )
 
     await msg.answer(
-        f'Теперь отслеживаемая цена этой монеты: {tracking_price}',
+        text,
         reply_markup=one_button_keyboard(
             text='Назад',
-            callback_data=f'coin_{coin_id}',
+            callback_data=f'coin_{coin.pk}',
         ),
     )
     await state.set_state(None)
@@ -231,7 +261,7 @@ async def toggle_tracking_params(
     await ClientCoin.objects.filter(
         coin_id=coin_id,
         client_id=query.message.chat.id,
-    ).aupdate(tracking_param=query.data)
+    ).aupdate(tracking_param=query.data, notification_sent=False)
     tracking_param = CoinTrackingParams(query.data).label
 
     try:

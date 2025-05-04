@@ -72,18 +72,18 @@ async def send_coin_message(coin_price: CoinPrice):
     clients = Client.objects.filter(
         Q(
             coins__tracking_param=CoinTrackingParams.PRICE_UP,
-            coins__tracking_price__gte=coin_price.price,
+            coins__tracking_price__lte=coin_price.price,
         )
         | Q(
             coins__tracking_param=CoinTrackingParams.PRICE_DOWN,
-            coins__tracking_price__lte=coin_price.price,
+            coins__tracking_price__gte=coin_price.price,
         ),
         coins__coin__address=coin_price.address,
         coins__notification_sent=False,
         alerts_enabled=True,
     )
 
-    text = f'Цена монеты {coin.symbol} достигла {coin_price.price}$'
+    text = f'Цена монеты {coin.symbol} достигла ${coin_price.price}'
     await asyncio_wait(
         [
             asyncio.create_task(safe_send_message(c.pk, text))
@@ -91,7 +91,7 @@ async def send_coin_message(coin_price: CoinPrice):
         ],
     )
 
-    await ClientCoin.objects.filter(client__in=clients).aupdate(
+    await ClientCoin.objects.filter(client__in=clients, coin=coin).aupdate(
         notification_sent=True,
     )
 
@@ -118,9 +118,9 @@ async def notify_coins_prices_changes():
         await asyncio_wait(
             [
                 asyncio.create_task(_notify(api, **coin))
-                async for coin in Coin.objects.values('chain').annotate(
-                    addresses=ArrayAgg('address'),
-                )
+                async for coin in Coin.objects.get_tracked()
+                .values('chain')
+                .annotate(addresses=ArrayAgg('address'))
             ],
         )
 
@@ -129,11 +129,15 @@ async def get_wallet_new_transactions(
     api: AlchemyAPI,
     wallet: Wallet,
 ) -> list[TransactionData]:
-    transactions = await api.get_signatures(wallet.address)
+    async def get_transaction(_tx: str):
+        tr = await api.get_transaction(wallet.address, _tx)
+        if not tr:
+            await Transaction.objects.acreate(wallet=wallet, signature=_tx)
+        return tr
 
+    transactions = await api.get_signatures(wallet.address)
     # if wallet.address == 'HSYkA267XP4uiQjEcjAhbJfySvptQzRgBG3XPZpZJqxf':
     #     transactions = ['test_000']
-
     already_sent_transactions = await sync_to_async(
         lambda: list(
             Transaction.objects.filter(signature__in=transactions).values_list(
@@ -145,7 +149,7 @@ async def get_wallet_new_transactions(
 
     done, _ = await asyncio_wait(
         [
-            asyncio.create_task(api.get_transaction(wallet.address, tx))
+            asyncio.create_task(get_transaction(tx))
             for tx in transactions
             if tx not in already_sent_transactions
         ],
@@ -161,6 +165,19 @@ async def filter_wallet_transactions(
     prices = await api.get_historical_prices('solana-mainnet', token_address)
 
     if not prices:
+        await Transaction.objects.abulk_create(
+            [
+                Transaction(
+                    wallet=await Wallet.objects.aget(
+                        address=tx.wallet_address,
+                    ),
+                    coin_amount=tx.token_amount,
+                    date=datetime.fromtimestamp(tx.timestamp, tz=UTC),
+                    signature=tx.signature,
+                )
+                for tx in tx_list
+            ],
+        )
         return []
 
     try:
@@ -202,10 +219,10 @@ async def send_wallet_transaction(
     text = (
         f'Кошелек {tx.wallet_address}\n\n'
         f'Покупка монеты {coin.symbol}\n'
-        f'Цена монеты: {history.price} USD\n'
-        f'Рыночная капитализация: {history.market_cap} USD\n'
+        f'Цена монеты: ${history.price}\n'
+        f'Рыночная капитализация: ${history.market_cap}\n'
         f'Количество: {tx.token_amount}\n'
-        f'Общая сумма: {tx.token_amount * history.price} USD'
+        f'Общая сумма: ${tx.token_amount * history.price}'
     )
     wallet = await Wallet.objects.aget(address=tx.wallet_address)
     await asyncio_wait(
@@ -226,7 +243,7 @@ async def notify_wallets_transactions():
         done, _ = await asyncio_wait(
             [
                 asyncio.create_task(get_wallet_new_transactions(api, w))
-                async for w in Wallet.objects.all()
+                async for w in Wallet.objects.get_tracked()
             ],
         )
         transactions = [
@@ -261,7 +278,7 @@ async def notify_wallets_transactions():
 
 async def notify():
     await notify_coins_prices_changes()
-    await asyncio.sleep(settings.NOTIFY_COINS_TIMEOUT)
+    await asyncio.sleep(settings.NOTIFY_TIMEOUT)
     await notify_wallets_transactions()
-    await asyncio.sleep(settings.NOTIFY_WALLETS_TIMEOUT)
+    await asyncio.sleep(settings.NOTIFY_TIMEOUT)
     loop.create_task(notify())
