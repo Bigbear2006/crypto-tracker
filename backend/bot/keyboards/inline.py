@@ -1,7 +1,7 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from bot.keyboards.utils import get_paginated_keyboard
+from bot.keyboards.utils import get_paginated_keyboard, one_button_keyboard
 from core.models import Coin, CoinTrackingParams, Wallet
 
 cancel_kb = InlineKeyboardMarkup(
@@ -78,6 +78,31 @@ alerts_kb = InlineKeyboardMarkup(
         ],
     ],
 )
+
+filters_kb = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text='Максимальная цена монеты',
+                callback_data='filter:max_coin_price',
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text='Минимальная капитализация монеты',
+                callback_data='filter:min_coin_market_cap',
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text='Минимальный возраст монеты',
+                callback_data='filter:max_coin_creation_date',
+            ),
+        ],
+    ],
+)
+
+to_filters_kb = one_button_keyboard(text='Назад', callback_data='to_filters')
 
 chains_kb = InlineKeyboardMarkup(
     inline_keyboard=[

@@ -1,3 +1,5 @@
+from datetime import UTC, datetime
+
 from bot.api.base import APIClient
 from bot.exceptions import CoinNotFound
 from bot.schemas import CoinInfo
@@ -25,6 +27,10 @@ class DexscreenerAPI(APIClient):
                     symbol=i['baseToken']['symbol'],
                     logo=i.get('info', {}).get('imageUrl', ''),
                     name=i['baseToken']['name'],
+                    created_at=datetime.fromtimestamp(
+                        i['pairCreatedAt'] / 1000,
+                        tz=UTC,
+                    ),
                     market_cap=i['marketCap'],
                     price=i['priceUsd'],
                     price_5m_percents=i['priceChange'].get('price_m5'),

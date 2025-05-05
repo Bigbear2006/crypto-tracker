@@ -93,6 +93,7 @@ class CoinManager(models.Manager):
                     name=coin_info.name,
                     symbol=coin_info.symbol,
                     logo=coin_info.logo,
+                    created_at=coin_info.created_at,
                 )
         return coin
 
@@ -159,6 +160,21 @@ class Client(models.Model):
         default=False,
     )
     alerts_enabled = models.BooleanField('Уведомления', default=True)
+    max_coin_price = models.FloatField(
+        'Максимальная цена монеты',
+        null=True,
+        blank=True,
+    )
+    min_coin_market_cap = models.PositiveBigIntegerField(
+        'Минимальная капитализация монеты',
+        null=True,
+        blank=True,
+    )
+    max_coin_creation_date = models.DateTimeField(
+        'Максимальная дата создания монеты',
+        null=True,
+        blank=True,
+    )
     created_at = models.DateTimeField('Дата создания', auto_now_add=True)
     objects = ClientManager()
 
@@ -194,6 +210,7 @@ class Coin(models.Model):
     name = models.CharField('Название', max_length=255, blank=True)
     symbol = models.CharField('Символ', max_length=255, blank=True)
     logo = models.URLField('Лого', blank=True)
+    created_at = models.DateTimeField('Дата создания монеты')
     objects = CoinManager()
 
     class Meta:

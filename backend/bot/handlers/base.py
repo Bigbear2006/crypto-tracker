@@ -10,9 +10,11 @@ router = Router()
 
 
 @router.message(Command('start'))
-@flags.with_client
-async def start(msg: Message, client: Client, client_created: bool):
-    if client_created:
+async def start(msg: Message):
+    client, created = await Client.objects.create_or_update_from_tg_user(
+        msg.from_user,
+    )
+    if created:
         logger.info(f'New client {client} id={client.pk} was created')
     else:
         logger.info(f'Client {client} id={client.pk} was updated')
@@ -25,7 +27,8 @@ async def start(msg: Message, client: Client, client_created: bool):
         '/edit_wallet - Редактировать отслеживаемые кошельки\n'
         '/add_coin - Добавить монету для отслеживания\n'
         '/edit_coin - Редактировать отслеживаемые монеты\n'
-        '/toggle_alerts - Вкл/выкл оповещения',
+        '/filters - Редактировать фильтры\n'
+        '/toggle_alerts - Вкл/выкл оповещения\n',
     )
 
 

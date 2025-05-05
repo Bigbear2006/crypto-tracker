@@ -200,15 +200,7 @@ async def filter_wallet_transactions(
         ],
     )
 
-    return [
-        (tx, coin, prices)
-        for tx in tx_list
-        if (
-            prices.price <= settings.MAX_COIN_PRICE
-            and prices.market_cap >= settings.MIN_COIN_MARKET_CAP
-            and tx.token_amount * prices.price >= settings.MIN_BUYING_AMOUNT
-        )
-    ]
+    return [(tx, coin, prices) for tx in tx_list]
 
 
 async def send_wallet_transaction(
@@ -229,6 +221,12 @@ async def send_wallet_transaction(
         [
             asyncio.create_task(safe_send_message(c.pk, text))
             async for c in Client.objects.filter(
+                Q(max_coin_price__gte=history.price)
+                | Q(max_coin_price__isnull=True),
+                Q(min_coin_market_cap__lte=history.market_cap)
+                | Q(min_coin_market_cap__isnull=True),
+                Q(max_coin_creation_date__gte=coin.created_at)
+                | Q(max_coin_creation_date__isnull=True),
                 wallets__wallet=wallet,
                 alerts_enabled=True,
             )
@@ -277,8 +275,8 @@ async def notify_wallets_transactions():
 
 
 async def notify():
-    await notify_coins_prices_changes()
-    await asyncio.sleep(settings.NOTIFY_TIMEOUT)
+    # await notify_coins_prices_changes()
+    # await asyncio.sleep(settings.NOTIFY_TIMEOUT)
     await notify_wallets_transactions()
     await asyncio.sleep(settings.NOTIFY_TIMEOUT)
     loop.create_task(notify())

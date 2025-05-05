@@ -12,17 +12,20 @@ async def main():
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
     django.setup()
 
-    from bot.handlers import alerts, base, coin, wallet
+    from bot.handlers import alerts, base, coin, filters, wallet
     from bot.middlewares import WithClientMiddleware
+    from bot.notify import notify  # noqa
 
     dp.include_routers(
         base.router,
         wallet.router,
         coin.router,
+        filters.router,
         alerts.router,
     )
     dp.message.filter(F.chat.type == ChatType.PRIVATE)
     dp.message.middleware(WithClientMiddleware())
+    dp.callback_query.middleware(WithClientMiddleware())
 
     await bot.delete_webhook(drop_pending_updates=True)
     await bot.set_my_commands(
@@ -45,6 +48,10 @@ async def main():
                 description='Редактировать отслеживаемые монеты',
             ),
             BotCommand(
+                command='/filters',
+                description='Редактировать фильтры',
+            ),
+            BotCommand(
                 command='/toggle_alerts',
                 description='Вкл/выкл оповещения',
             ),
@@ -52,7 +59,7 @@ async def main():
     )
 
     logger.info('Starting bot...')
-    # loop.create_task(notify())
+    loop.create_task(notify())
     await dp.start_polling(bot)
 
 

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 
 
 @dataclass
@@ -7,6 +8,7 @@ class CoinInfo:
     symbol: str
     logo: str
     name: str
+    created_at: datetime
     market_cap: int
     price: float
     price_5m_percents: float | None = None

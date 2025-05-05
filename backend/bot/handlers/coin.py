@@ -71,7 +71,7 @@ async def coins_list(msg: Message | CallbackQuery, state: FSMContext):
     answer_func = (
         msg.answer if isinstance(msg, Message) else msg.message.edit_text
     )
-    await state.update_data(coin_id=None)
+    await state.update_data(coin_id=None, coin_address=None)
     await answer_func(
         text='Монеты, которые вы отслеживаете',
         reply_markup=await get_coins_list_keyboard(client_id),
@@ -172,7 +172,7 @@ async def set_coin_tracking_params(query: CallbackQuery, state: FSMContext):
 async def set_coin_tracking_price(query: CallbackQuery, state: FSMContext):
     await state.set_state(CoinState.tracking_price)
     await query.message.answer(
-        'Введите цену для уведомления.\nПример: 1.02',
+        'Введите цену для уведомления. Пример: 1.02',
         reply_markup=cancel_kb,
     )
 
