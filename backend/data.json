@@ -1,0 +1,1086 @@
+[
+{
+  "model": "core.client",
+  "pk": 1736885484,
+  "fields": {
+    "first_name": "Bigbear",
+    "last_name": null,
+    "username": "JohanLiebertMonster",
+    "is_premium": true,
+    "alerts_enabled": true,
+    "max_coin_price": null,
+    "min_coin_market_cap": null,
+    "max_coin_creation_date": "2030-03-12T21:00:00Z",
+    "created_at": "2025-04-11T11:35:00.038Z"
+  }
+},
+{
+  "model": "core.client",
+  "pk": 6567362342,
+  "fields": {
+    "first_name": "Петр",
+    "last_name": "BOTTEC",
+    "username": "bottecp",
+    "is_premium": true,
+    "alerts_enabled": true,
+    "max_coin_price": 0.005,
+    "min_coin_market_cap": 20000,
+    "max_coin_creation_date": "2025-05-04T21:00:00Z",
+    "created_at": "2025-05-03T12:10:46.898Z"
+  }
+},
+{
+  "model": "core.client",
+  "pk": 7657928445,
+  "fields": {
+    "first_name": "Михаил BOTTEC",
+    "last_name": null,
+    "username": "bottecm",
+    "is_premium": true,
+    "alerts_enabled": true,
+    "max_coin_price": null,
+    "min_coin_market_cap": null,
+    "max_coin_creation_date": null,
+    "created_at": "2025-05-05T12:14:40.383Z"
+  }
+},
+{
+  "model": "core.wallet",
+  "pk": 18,
+  "fields": {
+    "address": "HSYkA267XP4uiQjEcjAhbJfySvptQzRgBG3XPZpZJqxf",
+    "chain": "solana-mainnet"
+  }
+},
+{
+  "model": "core.wallet",
+  "pk": 19,
+  "fields": {
+    "address": "DvB8LSLYKsTRj112RTwZNHDvMX6xKyY29YxRAZY7vYfz",
+    "chain": "solana-mainnet"
+  }
+},
+{
+  "model": "core.wallet",
+  "pk": 20,
+  "fields": {
+    "address": "52Z7gAFah4isuWuE3CNcixoj481pqaeQSJxS3NbDbkcN",
+    "chain": "solana-mainnet"
+  }
+},
+{
+  "model": "core.wallet",
+  "pk": 21,
+  "fields": {
+    "address": "82juNEnSAa7wmhmsJDkk7yuoHi9yPsLtwbFPK1s8Mkss",
+    "chain": "solana-mainnet"
+  }
+},
+{
+  "model": "core.wallet",
+  "pk": 22,
+  "fields": {
+    "address": "J2nh62PBnpHAKp3B8nFckmWK7S5w8PuozESMrHRMuMKT",
+    "chain": "solana-mainnet"
+  }
+},
+{
+  "model": "core.wallet",
+  "pk": 23,
+  "fields": {
+    "address": "BBzFBhxXHb4VgvVQUD9z7aXDG7jKskErgRL2grf9LQbt",
+    "chain": "solana-mainnet"
+  }
+},
+{
+  "model": "core.wallet",
+  "pk": 24,
+  "fields": {
+    "address": "vUZ7HP7WvjQVnSCgR7riSE84tL8HRqFhU1CCywhJ9A9",
+    "chain": "solana-mainnet"
+  }
+},
+{
+  "model": "core.wallet",
+  "pk": 26,
+  "fields": {
+    "address": "2QfBNK2WDwSLoUQRb1zAnp3KM12N9hQ8q6ApwUMnWW2T",
+    "chain": "solana-mainnet"
+  }
+},
+{
+  "model": "core.wallet",
+  "pk": 27,
+  "fields": {
+    "address": "7dGrdJRYtsNR8UYxZ3TnifXGjGc9eRYLq9sELwYpuuUu",
+    "chain": "solana-mainnet"
+  }
+},
+{
+  "model": "core.wallet",
+  "pk": 28,
+  "fields": {
+    "address": "EzdQH5zUfTMGb3vwU4oumxjVcxKMDpJ6dB78pbjfHmmb",
+    "chain": "solana-mainnet"
+  }
+},
+{
+  "model": "core.wallet",
+  "pk": 29,
+  "fields": {
+    "address": "BUJjbJBu5kkxZGQNxx5QLXdyxx5HThht2NepcDZJ1P2f",
+    "chain": "solana-mainnet"
+  }
+},
+{
+  "model": "core.wallet",
+  "pk": 30,
+  "fields": {
+    "address": "HvFdDWS3RqymRAVx1ZdoL2RjiC38r5dtt19Z8op5jqDK",
+    "chain": "solana-mainnet"
+  }
+},
+{
+  "model": "core.wallet",
+  "pk": 31,
+  "fields": {
+    "address": "3pjWyeFUPa9Sppf15BAJYim4K2kVZThbLbYzThhLUBbG",
+    "chain": "solana-mainnet"
+  }
+},
+{
+  "model": "core.wallet",
+  "pk": 32,
+  "fields": {
+    "address": "5CY89DZjc9nVdwTa8U1VadVsgAh64r78GBoDf3irmW7v",
+    "chain": "solana-mainnet"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 9,
+  "fields": {
+    "address": "9BB6NFEcjBCtnNLFko2FqVQBq8HHM13kCyYcdQbgpump",
+    "chain": "solana-mainnet",
+    "name": "Fartcoin",
+    "symbol": "Fartcoin",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/9BB6NFEcjBCtnNLFko2FqVQBq8HHM13kCyYcdQbgpump.png?key=8180d2",
+    "created_at": "2025-05-05T07:03:57.611Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 10,
+  "fields": {
+    "address": "8i93CHmhcqtCWMvaAdiTngwbQMQRKFW6g2ojnyhUpump",
+    "chain": "solana-mainnet",
+    "name": "CHAD",
+    "symbol": "CHAD",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/8i93CHmhcqtCWMvaAdiTngwbQMQRKFW6g2ojnyhUpump.png?key=814d29",
+    "created_at": "2025-05-05T07:03:57.611Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 11,
+  "fields": {
+    "address": "4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R",
+    "chain": "solana-mainnet",
+    "name": "Raydium",
+    "symbol": "RAY",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R.png?key=82d712",
+    "created_at": "2025-05-05T07:03:57.611Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 12,
+  "fields": {
+    "address": "XyB6BcyXhkr5qMeKfLG8aH2nmhpTD4RG5CQeFdKpump",
+    "chain": "solana-mainnet",
+    "name": "GPT-4o",
+    "symbol": "GPT-4o",
+    "logo": "",
+    "created_at": "2025-05-05T07:03:57.611Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 13,
+  "fields": {
+    "address": "CrFQVWjxeTMrdusJGoT6csF5UkLZArvhGXtNngLqpump",
+    "chain": "solana-mainnet",
+    "name": "better than sex",
+    "symbol": "MEMECOINS",
+    "logo": "",
+    "created_at": "2025-05-05T07:03:57.611Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 14,
+  "fields": {
+    "address": "J5DzAP6j17bXBXykvkQVM5ntfyWAdL88okBQvDH9pump",
+    "chain": "solana-mainnet",
+    "name": "CUCK",
+    "symbol": "CUCK",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/J5DzAP6j17bXBXykvkQVM5ntfyWAdL88okBQvDH9pump.png?key=bc89d5",
+    "created_at": "2025-05-05T07:03:57.611Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 15,
+  "fields": {
+    "address": "2zvYh1BLjVMDAyFwedUiMedaVKX6mT61BoDNwgc8pump",
+    "chain": "solana-mainnet",
+    "name": "American Bitcoin",
+    "symbol": "ABTC",
+    "logo": "",
+    "created_at": "2025-05-05T07:03:57.611Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 16,
+  "fields": {
+    "address": "GryJS9EHDcnB9gebYQsQ1r9qUXYwVhmzicVGcHwspump",
+    "chain": "solana-mainnet",
+    "name": "LockedOut",
+    "symbol": "LockedOut",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/GryJS9EHDcnB9gebYQsQ1r9qUXYwVhmzicVGcHwspump.png?key=ed5d3e",
+    "created_at": "2025-05-05T07:03:57.611Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 17,
+  "fields": {
+    "address": "6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN",
+    "chain": "solana-mainnet",
+    "name": "OFFICIAL TRUMP",
+    "symbol": "TRUMP",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN.png?key=f02e9e",
+    "created_at": "2025-05-04T21:00:00Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 18,
+  "fields": {
+    "address": "3eemkcxo74XnwaEEuiRcUfJfYH9me1HGo4Taw6V2pump",
+    "chain": "solana-mainnet",
+    "name": "Shibashi",
+    "symbol": "犬",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/3eemkcxo74XnwaEEuiRcUfJfYH9me1HGo4Taw6V2pump.png?key=131584",
+    "created_at": "2025-05-05T07:03:57.611Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 19,
+  "fields": {
+    "address": "DitHyRMQiSDhn5cnKMJV2CDDt6sVct96YrECiM49pump",
+    "chain": "solana-mainnet",
+    "name": "Housecoin",
+    "symbol": "House",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/DitHyRMQiSDhn5cnKMJV2CDDt6sVct96YrECiM49pump.png?key=a0be58",
+    "created_at": "2025-05-05T07:03:57.611Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 20,
+  "fields": {
+    "address": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+    "chain": "solana-mainnet",
+    "name": "Bonk",
+    "symbol": "Bonk",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263.png?key=5d3e48",
+    "created_at": "2025-05-05T07:03:57.611Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 21,
+  "fields": {
+    "address": "4572dnq94KEHc3A3piZMKs5WtwoUbwe2F78v6Vx8pump",
+    "chain": "solana-mainnet",
+    "name": "GORKLON RUST",
+    "symbol": "GORKLON",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/4572dnq94KEHc3A3piZMKs5WtwoUbwe2F78v6Vx8pump.png?key=04df2e",
+    "created_at": "2025-05-04T18:27:18Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 22,
+  "fields": {
+    "address": "9DHe3pycTuymFk4H4bbPoAJ4hQrr2kaLDF6J6aAKpump",
+    "chain": "solana-mainnet",
+    "name": "Hive AI",
+    "symbol": "BUZZ",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/9DHe3pycTuymFk4H4bbPoAJ4hQrr2kaLDF6J6aAKpump.png?key=bfee4c",
+    "created_at": "2025-01-03T02:13:31Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 23,
+  "fields": {
+    "address": "KMNo3nJsBXfcpJTVhZcXLW7RmTwTt4GVFE7suUBo9sS",
+    "chain": "solana-mainnet",
+    "name": "Kamino",
+    "symbol": "KMNO",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/KMNo3nJsBXfcpJTVhZcXLW7RmTwTt4GVFE7suUBo9sS.png?key=8db26b",
+    "created_at": "2024-10-10T10:16:55Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 24,
+  "fields": {
+    "address": "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+    "chain": "solana-mainnet",
+    "name": "USDT",
+    "symbol": "USDT",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB.png?key=c330b1",
+    "created_at": "2024-05-11T13:19:26Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 25,
+  "fields": {
+    "address": "HaL8cPcEZgwLaCbwyf6aAPh7rhw7iHck22zFXSNjpump",
+    "chain": "solana-mainnet",
+    "name": "Claude",
+    "symbol": "Claude",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/HaL8cPcEZgwLaCbwyf6aAPh7rhw7iHck22zFXSNjpump.png?key=739bb4",
+    "created_at": "2024-10-22T11:22:26Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 26,
+  "fields": {
+    "address": "2zMMhcVQEXDtdE6vsFS7S7D5oUodfJHE8vd1gnBouauv",
+    "chain": "solana-mainnet",
+    "name": "Pudgy Penguins",
+    "symbol": "PENGU",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/2zMMhcVQEXDtdE6vsFS7S7D5oUodfJHE8vd1gnBouauv.png?key=fc16b6",
+    "created_at": "2024-12-17T12:59:56Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 27,
+  "fields": {
+    "address": "J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn",
+    "chain": "solana-mainnet",
+    "name": "Jito Staked SOL",
+    "symbol": "JitoSOL",
+    "logo": "",
+    "created_at": "2022-11-28T02:41:34Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 28,
+  "fields": {
+    "address": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    "chain": "solana-mainnet",
+    "name": "USD Coin",
+    "symbol": "USDC",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v.png?key=da8880",
+    "created_at": "2022-11-28T02:40:19Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 29,
+  "fields": {
+    "address": "38PgzpJYu2HkiYvV8qePFakB8tuobPdGm2FFEn7Dpump",
+    "chain": "solana-mainnet",
+    "name": "New XAI gork",
+    "symbol": "gork",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/38PgzpJYu2HkiYvV8qePFakB8tuobPdGm2FFEn7Dpump.png?key=059a31",
+    "created_at": "2025-04-30T20:25:48Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 30,
+  "fields": {
+    "address": "8h3jsXbvBRPKGGRPhoYRHr7ca8qH3tBeaE2S93X1pump",
+    "chain": "solana-mainnet",
+    "name": "Decentralized Retirement Account",
+    "symbol": "DRA",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/8h3jsXbvBRPKGGRPhoYRHr7ca8qH3tBeaE2S93X1pump.png?key=f0737c",
+    "created_at": "2025-05-01T19:20:05Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 31,
+  "fields": {
+    "address": "Ce2gx9KGXJ6C9Mp5b5x1sn9Mg87JwEbrQby4Zqo3pump",
+    "chain": "solana-mainnet",
+    "name": "NotInEmploymentEducationTraining",
+    "symbol": "neet",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/Ce2gx9KGXJ6C9Mp5b5x1sn9Mg87JwEbrQby4Zqo3pump.png?key=6a3f87",
+    "created_at": "2025-04-27T00:58:11Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 32,
+  "fields": {
+    "address": "GtDZKAqvMZMnti46ZewMiXCa4oXF4bZxwQPoKzXPFxZn",
+    "chain": "solana-mainnet",
+    "name": "nubcat",
+    "symbol": "nub",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/GtDZKAqvMZMnti46ZewMiXCa4oXF4bZxwQPoKzXPFxZn.png?key=fe767e",
+    "created_at": "2024-03-25T02:21:49Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 33,
+  "fields": {
+    "address": "JosjEXh69RckgSs2AWsN1xN8zmiSHxBuJjHLURJnHhg",
+    "chain": "solana-mainnet",
+    "name": "JuliaOS",
+    "symbol": "JOS",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/JosjEXh69RckgSs2AWsN1xN8zmiSHxBuJjHLURJnHhg.png?key=7dd141",
+    "created_at": "2025-04-23T15:32:15Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 34,
+  "fields": {
+    "address": "8BtoThi2ZoXnF7QQK1Wjmh2JuBw9FjVvhnGMVZ2vpump",
+    "chain": "solana-mainnet",
+    "name": "Dark Eclipse",
+    "symbol": "DARK",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/8BtoThi2ZoXnF7QQK1Wjmh2JuBw9FjVvhnGMVZ2vpump.png?key=d2164a",
+    "created_at": "2025-04-04T16:26:42Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 35,
+  "fields": {
+    "address": "MEW1gQWJ3nEXg2qgERiKu7FAFj79PHvQVREQUzScPP5",
+    "chain": "solana-mainnet",
+    "name": "cat in a dogs world",
+    "symbol": "MEW",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/MEW1gQWJ3nEXg2qgERiKu7FAFj79PHvQVREQUzScPP5.png?key=e3389f",
+    "created_at": "2024-11-20T09:25:02Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 36,
+  "fields": {
+    "address": "Ey59PH7Z4BFU4HjyKnyMdWt5GGN76KazTAwQihoUXRnk",
+    "chain": "solana-mainnet",
+    "name": "Launch Coin on Believe",
+    "symbol": "LAUNCHCOIN",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/Ey59PH7Z4BFU4HjyKnyMdWt5GGN76KazTAwQihoUXRnk.png?key=079626",
+    "created_at": "2025-01-24T03:39:52Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 37,
+  "fields": {
+    "address": "SLNDpmoWTVADgEdndyvWzroNL7zSi1dF9PC3xHGtPwp",
+    "chain": "solana-mainnet",
+    "name": "Solend",
+    "symbol": "SLND",
+    "logo": "",
+    "created_at": "2024-07-28T02:03:20Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 38,
+  "fields": {
+    "address": "4FkNq8RcCYg4ZGDWh14scJ7ej3m5vMjYTcWoJVkupump",
+    "chain": "solana-mainnet",
+    "name": "Lumo-8B-Instruct",
+    "symbol": "LUMO",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/4FkNq8RcCYg4ZGDWh14scJ7ej3m5vMjYTcWoJVkupump.png?key=6f0838",
+    "created_at": "2025-01-15T18:28:28Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 39,
+  "fields": {
+    "address": "4rwPNRSFgcS7EGphFdX7VwXuhjZGxph7gYyb7Zp2pump",
+    "chain": "solana-mainnet",
+    "name": "AuraFarming",
+    "symbol": "AuraFarm",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/4rwPNRSFgcS7EGphFdX7VwXuhjZGxph7gYyb7Zp2pump.png?key=c9d597",
+    "created_at": "2025-03-22T16:28:16Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 40,
+  "fields": {
+    "address": "USDSwr9ApdHk5bvJKMjzff41FfuX8bSxdKcR81vTwcA",
+    "chain": "solana-mainnet",
+    "name": "USDS",
+    "symbol": "USDS",
+    "logo": "",
+    "created_at": "2024-11-27T22:12:48Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 41,
+  "fields": {
+    "address": "4TBi66vi32S7J8X1A6eWfaLHYmUXu7CStcEmsJQdpump",
+    "chain": "solana-mainnet",
+    "name": "Ghiblification",
+    "symbol": "Ghibli",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/4TBi66vi32S7J8X1A6eWfaLHYmUXu7CStcEmsJQdpump.png?key=b6420e",
+    "created_at": "2025-03-26T09:50:10Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 42,
+  "fields": {
+    "address": "9McvH6w97oewLmPxqQEoHUAv3u5iYMyQ9AeZZhguYf1T",
+    "chain": "solana-mainnet",
+    "name": "HeyAnon",
+    "symbol": "Anon",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/9McvH6w97oewLmPxqQEoHUAv3u5iYMyQ9AeZZhguYf1T.png?key=266d14",
+    "created_at": "2024-12-29T15:33:53Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 43,
+  "fields": {
+    "address": "7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr",
+    "chain": "solana-mainnet",
+    "name": "Popcat",
+    "symbol": "POPCAT",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/7GCihgDB8fe6KNjn2MYtkzZcRjQy3t9GHdC8uHYmW2hr.png?key=9ceece",
+    "created_at": "2024-07-03T22:39:06Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 44,
+  "fields": {
+    "address": "HRw8mqK8N3ASKFKJGMJpy4FodwR3GKvCFKPDQNqUNuEP",
+    "chain": "solana-mainnet",
+    "name": "TrumpCoin",
+    "symbol": "DJT",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/HRw8mqK8N3ASKFKJGMJpy4FodwR3GKvCFKPDQNqUNuEP.png?key=9ad41e",
+    "created_at": "2024-08-15T05:32:45Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 45,
+  "fields": {
+    "address": "FtUEW73K6vEYHfbkfpdBZfWpxgQar2HipGdbutEhpump",
+    "chain": "solana-mainnet",
+    "name": "titcoin",
+    "symbol": "titcoin",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/FtUEW73K6vEYHfbkfpdBZfWpxgQar2HipGdbutEhpump.png?key=107b7c",
+    "created_at": "2025-03-06T19:43:30Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 46,
+  "fields": {
+    "address": "HW7D5MyYG4Dz2C98axfjVBeLWpsEnofrqy6ZUwqwpump",
+    "chain": "solana-mainnet",
+    "name": "ViralMind",
+    "symbol": "VIRAL",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/HW7D5MyYG4Dz2C98axfjVBeLWpsEnofrqy6ZUwqwpump.png?key=d14ab8",
+    "created_at": "2024-12-19T03:02:24Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 47,
+  "fields": {
+    "address": "5UUH9RTDiSpq6HKS6bp4NdU9PNJpXRXuiw6ShBTBhgH2",
+    "chain": "solana-mainnet",
+    "name": "TROLL",
+    "symbol": "TROLL",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/5UUH9RTDiSpq6HKS6bp4NdU9PNJpXRXuiw6ShBTBhgH2.png?key=891d6c",
+    "created_at": "2025-04-20T18:30:26Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 48,
+  "fields": {
+    "address": "H4phNbsqjV5rqk8u6FUACTLB6rNZRTAPGnBb8KXJpump",
+    "chain": "solana-mainnet",
+    "name": "Solana Social Explorer",
+    "symbol": "SSE",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/H4phNbsqjV5rqk8u6FUACTLB6rNZRTAPGnBb8KXJpump.png?key=b6058a",
+    "created_at": "2025-02-05T05:46:20Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 49,
+  "fields": {
+    "address": "4vMsoUT2BWatFweudnQM1xedRLfJgJ7hswhcpz4xgBTy",
+    "chain": "solana-mainnet",
+    "name": "HONEY",
+    "symbol": "HONEY",
+    "logo": "",
+    "created_at": "2023-10-21T14:18:18Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 50,
+  "fields": {
+    "address": "nosXBVoaCTtYdLvKY6Csb4AC8JCdQKKAaWYtx2ZMoo7",
+    "chain": "solana-mainnet",
+    "name": "Nosana",
+    "symbol": "NOS",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/nosXBVoaCTtYdLvKY6Csb4AC8JCdQKKAaWYtx2ZMoo7.png?key=bd8949",
+    "created_at": "2022-11-28T03:35:45Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 51,
+  "fields": {
+    "address": "9wK8yN6iz1ie5kEJkvZCTxyN1x5sTdNfx8yeMY8Ebonk",
+    "chain": "solana-mainnet",
+    "name": "Hosico cat",
+    "symbol": "Hosico",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/9wK8yN6iz1ie5kEJkvZCTxyN1x5sTdNfx8yeMY8Ebonk.png?key=0f7de2",
+    "created_at": "2025-04-25T20:31:45Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 52,
+  "fields": {
+    "address": "3iQL8BFS2vE7mww4ehAqQHAsbmRNCrPxizWAT2Zfyr9y",
+    "chain": "solana-mainnet",
+    "name": "Virtual Protocol",
+    "symbol": "VIRTUAL",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/3iQL8BFS2vE7mww4ehAqQHAsbmRNCrPxizWAT2Zfyr9y.png?key=2215b6",
+    "created_at": "2025-02-06T05:45:26Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 53,
+  "fields": {
+    "address": "Cy1GS2FqefgaMbi45UunrUzin1rfEmTUYnomddzBpump",
+    "chain": "solana-mainnet",
+    "name": "Moby AI",
+    "symbol": "MOBY",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/Cy1GS2FqefgaMbi45UunrUzin1rfEmTUYnomddzBpump.png?key=ae7c99",
+    "created_at": "2025-01-13T18:07:23Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 54,
+  "fields": {
+    "address": "9Wkcek2EZFmJf5L2XmC5rfnNVBrdndbMe6yW8fbfbonk",
+    "chain": "solana-mainnet",
+    "name": "Chachamaru",
+    "symbol": "CHACHA",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/9Wkcek2EZFmJf5L2XmC5rfnNVBrdndbMe6yW8fbfbonk.png?key=39292e",
+    "created_at": "2025-04-30T14:12:35Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 55,
+  "fields": {
+    "address": "CDBdbNqmrLu1PcgjrFG52yxg71QnFhBZcUE6PSFdbonk",
+    "chain": "solana-mainnet",
+    "name": "Let's BONK",
+    "symbol": "LetsBONK",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/CDBdbNqmrLu1PcgjrFG52yxg71QnFhBZcUE6PSFdbonk.png?key=0dca7f",
+    "created_at": "2025-04-25T18:21:07Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 56,
+  "fields": {
+    "address": "HeLp6NuQkmYB4pYWo2zYs22mESHXPQYzXbB8n4V98jwC",
+    "chain": "solana-mainnet",
+    "name": "ai16z",
+    "symbol": "ai16z",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/HeLp6NuQkmYB4pYWo2zYs22mESHXPQYzXbB8n4V98jwC.png?key=c7321d",
+    "created_at": "2025-02-16T22:56:46Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 57,
+  "fields": {
+    "address": "27G8MtK7VtTcCHkpASjSDdkWWYfoqT6ggEuKidVJidD4",
+    "chain": "solana-mainnet",
+    "name": "Jupiter Perps LP",
+    "symbol": "JLP",
+    "logo": "",
+    "created_at": "2024-03-25T06:15:52Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 58,
+  "fields": {
+    "address": "JmMRbLcKgNCu17yHZDAn4strE5NjmWJ4pCeJ7s7boop",
+    "chain": "solana-mainnet",
+    "name": "Boopa",
+    "symbol": "Boopa",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/JmMRbLcKgNCu17yHZDAn4strE5NjmWJ4pCeJ7s7boop.png?key=f419ad",
+    "created_at": "2025-05-03T19:38:17Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 59,
+  "fields": {
+    "address": "UPTx1d24aBWuRgwxVnFmX4gNraj3QGFzL3QqBgxtWQG",
+    "chain": "solana-mainnet",
+    "name": "UPROCK",
+    "symbol": "UPT",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/UPTx1d24aBWuRgwxVnFmX4gNraj3QGFzL3QqBgxtWQG.png?key=dfa41b",
+    "created_at": "2024-06-02T19:22:46Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 60,
+  "fields": {
+    "address": "GekTNfm84QfyP2GdAHZ5AgACBRd69aNmgA5FDhZupump",
+    "chain": "solana-mainnet",
+    "name": "ORBIT",
+    "symbol": "GRIFT",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/GekTNfm84QfyP2GdAHZ5AgACBRd69aNmgA5FDhZupump.png?key=45253d",
+    "created_at": "2024-12-06T14:05:38Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 61,
+  "fields": {
+    "address": "GkeUTuaFB4oZADaqiCo3yauHNx9SxUNn8euHptEEbonk",
+    "chain": "solana-mainnet",
+    "name": "Grassito",
+    "symbol": "Grassito",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/GkeUTuaFB4oZADaqiCo3yauHNx9SxUNn8euHptEEbonk.png?key=e12bbb",
+    "created_at": "2025-04-28T15:31:40Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 62,
+  "fields": {
+    "address": "4CoTCzobYt38zVbSieZxcmz2CCs8kmZJ6wnbj8HWocto",
+    "chain": "solana-mainnet",
+    "name": "OctonetAI",
+    "symbol": "OCTO",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/4CoTCzobYt38zVbSieZxcmz2CCs8kmZJ6wnbj8HWocto.png?key=4e6442",
+    "created_at": "2024-11-18T18:00:05Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 63,
+  "fields": {
+    "address": "6yjNqPzTSanBWSa6dxVEgTjePXBrZ2FoHLDQwYwEsyM6",
+    "chain": "solana-mainnet",
+    "name": "Chudjak",
+    "symbol": "Chud",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/6yjNqPzTSanBWSa6dxVEgTjePXBrZ2FoHLDQwYwEsyM6.png?key=85a47a",
+    "created_at": "2024-05-05T07:04:12Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 64,
+  "fields": {
+    "address": "8Ki8DpuWNxu9VsS3kQbarsCWMcFGWkzzA8pUPto9zBd5",
+    "chain": "solana-mainnet",
+    "name": "LOCK IN",
+    "symbol": "LOCKIN",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/8Ki8DpuWNxu9VsS3kQbarsCWMcFGWkzzA8pUPto9zBd5.png?key=7a6692",
+    "created_at": "2024-03-16T00:47:23Z"
+  }
+},
+{
+  "model": "core.coin",
+  "pk": 65,
+  "fields": {
+    "address": "WENWENvqqNya429ubCdR81ZmD69brwQaaBYY6p3LCpk",
+    "chain": "solana-mainnet",
+    "name": "Wen",
+    "symbol": "WEN",
+    "logo": "https://dd.dexscreener.com/ds-data/tokens/solana/WENWENvqqNya429ubCdR81ZmD69brwQaaBYY6p3LCpk.png?key=ca2a69",
+    "created_at": "2024-01-26T15:53:46Z"
+  }
+},
+{
+  "model": "core.clientcoin",
+  "pk": 5,
+  "fields": {
+    "client": 1736885484,
+    "coin": 9,
+    "tracking_param": "price_up",
+    "tracking_price": 1.091,
+    "notification_sent": true,
+    "created_at": "2025-04-23T06:11:58.254Z"
+  }
+},
+{
+  "model": "core.clientcoin",
+  "pk": 6,
+  "fields": {
+    "client": 1736885484,
+    "coin": 10,
+    "tracking_param": "price_down",
+    "tracking_price": 1.87e-05,
+    "notification_sent": true,
+    "created_at": "2025-04-23T06:12:07.403Z"
+  }
+},
+{
+  "model": "core.clientcoin",
+  "pk": 8,
+  "fields": {
+    "client": 6567362342,
+    "coin": 10,
+    "tracking_param": "price_up",
+    "tracking_price": 1.7e-05,
+    "notification_sent": true,
+    "created_at": "2025-05-03T12:20:20.264Z"
+  }
+},
+{
+  "model": "core.clientcoin",
+  "pk": 9,
+  "fields": {
+    "client": 1736885484,
+    "coin": 11,
+    "tracking_param": "price_down",
+    "tracking_price": 2.643,
+    "notification_sent": true,
+    "created_at": "2025-05-03T12:24:33.185Z"
+  }
+},
+{
+  "model": "core.clientcoin",
+  "pk": 10,
+  "fields": {
+    "client": 6567362342,
+    "coin": 12,
+    "tracking_param": "",
+    "tracking_price": null,
+    "notification_sent": false,
+    "created_at": "2025-05-03T12:26:45.302Z"
+  }
+},
+{
+  "model": "core.clientcoin",
+  "pk": 11,
+  "fields": {
+    "client": 6567362342,
+    "coin": 13,
+    "tracking_param": "",
+    "tracking_price": null,
+    "notification_sent": false,
+    "created_at": "2025-05-03T12:27:18.129Z"
+  }
+},
+{
+  "model": "core.clientcoin",
+  "pk": 12,
+  "fields": {
+    "client": 6567362342,
+    "coin": 18,
+    "tracking_param": "",
+    "tracking_price": null,
+    "notification_sent": false,
+    "created_at": "2025-05-04T12:46:53.414Z"
+  }
+},
+{
+  "model": "core.clientcoin",
+  "pk": 13,
+  "fields": {
+    "client": 1736885484,
+    "coin": 20,
+    "tracking_param": "",
+    "tracking_price": null,
+    "notification_sent": false,
+    "created_at": "2025-05-04T19:53:10.812Z"
+  }
+},
+{
+  "model": "core.clientcoin",
+  "pk": 14,
+  "fields": {
+    "client": 1736885484,
+    "coin": 21,
+    "tracking_param": "",
+    "tracking_price": null,
+    "notification_sent": false,
+    "created_at": "2025-05-05T11:40:21.556Z"
+  }
+},
+{
+  "model": "core.clientwallet",
+  "pk": 14,
+  "fields": {
+    "client": 1736885484,
+    "wallet": 18,
+    "created_at": "2025-04-23T05:28:35.385Z"
+  }
+},
+{
+  "model": "core.clientwallet",
+  "pk": 15,
+  "fields": {
+    "client": 1736885484,
+    "wallet": 23,
+    "created_at": "2025-04-23T05:46:00.701Z"
+  }
+},
+{
+  "model": "core.clientwallet",
+  "pk": 16,
+  "fields": {
+    "client": 1736885484,
+    "wallet": 20,
+    "created_at": "2025-05-03T12:11:42.894Z"
+  }
+},
+{
+  "model": "core.clientwallet",
+  "pk": 18,
+  "fields": {
+    "client": 6567362342,
+    "wallet": 20,
+    "created_at": "2025-05-03T12:15:37.283Z"
+  }
+},
+{
+  "model": "core.clientwallet",
+  "pk": 19,
+  "fields": {
+    "client": 1736885484,
+    "wallet": 22,
+    "created_at": "2025-05-03T20:00:38.690Z"
+  }
+},
+{
+  "model": "core.clientwallet",
+  "pk": 20,
+  "fields": {
+    "client": 6567362342,
+    "wallet": 23,
+    "created_at": "2025-05-04T12:44:19.754Z"
+  }
+},
+{
+  "model": "core.clientwallet",
+  "pk": 21,
+  "fields": {
+    "client": 6567362342,
+    "wallet": 24,
+    "created_at": "2025-05-04T12:45:48.849Z"
+  }
+},
+{
+  "model": "core.clientwallet",
+  "pk": 22,
+  "fields": {
+    "client": 6567362342,
+    "wallet": 18,
+    "created_at": "2025-05-04T13:13:22.576Z"
+  }
+},
+{
+  "model": "core.clientwallet",
+  "pk": 23,
+  "fields": {
+    "client": 6567362342,
+    "wallet": 26,
+    "created_at": "2025-05-06T07:57:27.880Z"
+  }
+},
+{
+  "model": "core.clientwallet",
+  "pk": 24,
+  "fields": {
+    "client": 6567362342,
+    "wallet": 27,
+    "created_at": "2025-05-06T07:57:38.368Z"
+  }
+},
+{
+  "model": "core.clientwallet",
+  "pk": 25,
+  "fields": {
+    "client": 6567362342,
+    "wallet": 28,
+    "created_at": "2025-05-06T07:57:45.062Z"
+  }
+},
+{
+  "model": "core.clientwallet",
+  "pk": 26,
+  "fields": {
+    "client": 6567362342,
+    "wallet": 29,
+    "created_at": "2025-05-06T07:57:54.864Z"
+  }
+},
+{
+  "model": "core.clientwallet",
+  "pk": 27,
+  "fields": {
+    "client": 6567362342,
+    "wallet": 30,
+    "created_at": "2025-05-06T07:58:05.423Z"
+  }
+},
+{
+  "model": "core.clientwallet",
+  "pk": 28,
+  "fields": {
+    "client": 6567362342,
+    "wallet": 31,
+    "created_at": "2025-05-06T07:58:25.318Z"
+  }
+},
+{
+  "model": "core.clientwallet",
+  "pk": 29,
+  "fields": {
+    "client": 6567362342,
+    "wallet": 32,
+    "created_at": "2025-05-06T07:58:32.867Z"
+  }
+}
+]

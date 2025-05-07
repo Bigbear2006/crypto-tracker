@@ -77,7 +77,14 @@ class AlchemyAPI(APIClient):
             },
         ) as rsp:
             data = await rsp.json()
-            logger.debug(data)
+
+            if not data.get('result'):
+                logger.info(data)
+                return
+
+            if err := data['result']['meta'].get('err'):
+                logger.info(err)
+                return
 
             # if signature == 'test_000':
             #     return TransactionData(
@@ -115,10 +122,8 @@ class AlchemyAPI(APIClient):
                 return
 
             token_amount = (
-                post_token_balance['uiTokenAmount']['uiAmount']
-                or 0 - pre_token_balance['uiTokenAmount']['uiAmount']
-                or 0
-            )
+                post_token_balance['uiTokenAmount']['uiAmount'] or 0
+            ) - (pre_token_balance['uiTokenAmount']['uiAmount'] or 0)
 
             return TransactionData(
                 wallet_address=wallet_address,

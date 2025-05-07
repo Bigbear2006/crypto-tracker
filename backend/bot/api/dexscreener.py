@@ -36,6 +36,7 @@ class DexscreenerAPI(APIClient):
                     price_5m_percents=i['priceChange'].get('price_m5'),
                 )
                 for i in data
+                if i.get('marketCap')
             ]
 
     async def get_coin_info(self, chain: str, address: str):

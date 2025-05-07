@@ -118,9 +118,9 @@ async def notify_coins_prices_changes():
         await asyncio_wait(
             [
                 asyncio.create_task(_notify(api, **coin))
-                async for coin in Coin.objects.get_tracked()
+                async for coin in Coin.objects.filter(clients__isnull=False)
                 .values('chain')
-                .annotate(addresses=ArrayAgg('address'))
+                .annotate(addresses=ArrayAgg('address', distinct=True))
             ],
         )
 
@@ -200,7 +200,7 @@ async def filter_wallet_transactions(
         ],
     )
 
-    return [(tx, coin, prices) for tx in tx_list]
+    return [(tx, coin, prices) for tx in tx_list if tx.token_amount >= 0]
 
 
 async def send_wallet_transaction(
@@ -275,8 +275,8 @@ async def notify_wallets_transactions():
 
 
 async def notify():
-    # await notify_coins_prices_changes()
-    # await asyncio.sleep(settings.NOTIFY_TIMEOUT)
+    await notify_coins_prices_changes()
+    await asyncio.sleep(settings.NOTIFY_TIMEOUT)
     await notify_wallets_transactions()
     await asyncio.sleep(settings.NOTIFY_TIMEOUT)
     loop.create_task(notify())

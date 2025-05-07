@@ -1,4 +1,4 @@
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 
 from aiogram import F, Router, flags
 from aiogram.filters import Command, StateFilter
@@ -32,7 +32,7 @@ async def set_filters(
         f'Минимальная капитализация монеты: '
         f'{client.min_coin_market_cap or "Нет"}\n'
         f'Максимальная дата создания монеты: '
-        f'{client.max_coin_creation_date.strftime(settings.DATE_FMT) or "Нет"}\n',
+        f'{client.max_coin_creation_date.strftime(settings.DATE_FMT) if client.max_coin_creation_date else "Нет"}\n',
         reply_markup=filters_kb,
     )
 
@@ -42,7 +42,7 @@ async def set_filters_2(query: CallbackQuery, state: FSMContext):
     texts = {
         'max_coin_price': 'Введите максимальную цену монеты. Пример: 4.5',
         'min_coin_market_cap': (
-            'Введите минимальную рыночную капитализацию монеты.Пример: 1000'
+            'Введите минимальную рыночную капитализацию монеты. Пример: 1000'
         ),
         'max_coin_creation_date': (
             'Введите максимальную дату создания монеты в формате ДД.ММ.ГГГГ.\n'
@@ -53,23 +53,6 @@ async def set_filters_2(query: CallbackQuery, state: FSMContext):
     await state.set_state(getattr(FiltersState, coin_filter))
     await query.message.edit_text(
         texts[coin_filter],
-        reply_markup=to_filters_kb,
-    )
-
-
-@router.message(F.text, StateFilter(FiltersState.min_coin_market_cap))
-async def set_min_coin_market_cap(msg: Message):
-    try:
-        min_coin_market_cap = float(msg.text)
-    except ValueError:
-        await msg.answer('Вы ввели некорректное число. Попробуйте еще раз')
-        return
-
-    await Client.objects.filter(pk=msg.chat.id).aupdate(
-        min_coin_market_cap=min_coin_market_cap,
-    )
-    await msg.answer(
-        f'Теперь максимальная цена монеты равна {min_coin_market_cap}',
         reply_markup=to_filters_kb,
     )
 
@@ -86,7 +69,24 @@ async def set_max_coin_price(msg: Message):
         max_coin_price=max_coin_price,
     )
     await msg.answer(
-        f'Теперь минимальная капитализация монеты равна {max_coin_price}',
+        f'Теперь максимальная цена монеты равна {max_coin_price}',
+        reply_markup=to_filters_kb,
+    )
+
+
+@router.message(F.text, StateFilter(FiltersState.min_coin_market_cap))
+async def set_min_coin_market_cap(msg: Message):
+    try:
+        min_coin_market_cap = float(msg.text)
+    except ValueError:
+        await msg.answer('Вы ввели некорректное число. Попробуйте еще раз')
+        return
+
+    await Client.objects.filter(pk=msg.chat.id).aupdate(
+        min_coin_market_cap=min_coin_market_cap,
+    )
+    await msg.answer(
+        f'Теперь минимальная капитализация монеты равна {min_coin_market_cap}',
         reply_markup=to_filters_kb,
     )
 
@@ -94,10 +94,10 @@ async def set_max_coin_price(msg: Message):
 @router.message(F.text, StateFilter(FiltersState.max_coin_creation_date))
 async def set_max_coin_creation_date(msg: Message):
     try:
-        max_coin_creation_date = (
-            datetime.strptime(msg.text, settings.DATE_FMT)
-            .astimezone(UTC)
-        )
+        max_coin_creation_date = datetime.strptime(
+            msg.text,
+            settings.DATE_FMT,
+        ).astimezone(UTC)
     except ValueError:
         await msg.answer('Вы ввели некорректную дату. Попробуйте еще раз')
         return
