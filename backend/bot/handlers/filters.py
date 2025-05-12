@@ -97,7 +97,7 @@ async def set_max_coin_creation_date(msg: Message):
         max_coin_creation_date = datetime.strptime(
             msg.text,
             settings.DATE_FMT,
-        ).astimezone(UTC)
+        ).replace(tzinfo=UTC)
     except ValueError:
         await msg.answer('Вы ввели некорректную дату. Попробуйте еще раз')
         return

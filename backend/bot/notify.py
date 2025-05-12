@@ -140,10 +140,9 @@ async def get_wallet_new_transactions(
     #     transactions = ['test_000']
     already_sent_transactions = await sync_to_async(
         lambda: list(
-            Transaction.objects.filter(signature__in=transactions).values_list(
-                'signature',
-                flat=True,
-            ),
+            Transaction.objects.filter(wallet=wallet, signature__in=transactions)
+            .order_by('-date')
+            .values_list('signature',flat=True)[:20],
         ),
     )()
 
@@ -275,8 +274,12 @@ async def notify_wallets_transactions():
 
 
 async def notify():
-    await notify_coins_prices_changes()
-    await asyncio.sleep(settings.NOTIFY_TIMEOUT)
-    await notify_wallets_transactions()
-    await asyncio.sleep(settings.NOTIFY_TIMEOUT)
+    try:
+        await notify_coins_prices_changes()
+        await asyncio.sleep(settings.NOTIFY_TIMEOUT)
+        await notify_wallets_transactions()
+        await asyncio.sleep(settings.NOTIFY_TIMEOUT)
+    except Exception as e:
+        logger.info(f'Error during notifying: {str(e)}')
+        await asyncio.sleep(settings.NOTIFY_TIMEOUT)
     loop.create_task(notify())
