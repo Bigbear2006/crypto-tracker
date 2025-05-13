@@ -72,7 +72,12 @@ class WalletManager(models.Manager):
         return wallet
 
     def get_tracked(self):
-        return self.annotate(clients_count=models.Count('clients')).filter(
+        return self.annotate(
+            clients_count=models.Count(
+                'clients',
+                filter=models.Q(clients__client__alerts_enabled=True),
+            ),
+        ).filter(
             clients_count__gt=0,
         )
 

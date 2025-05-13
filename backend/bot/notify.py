@@ -126,7 +126,10 @@ async def notify_coins_prices_changes():
         await asyncio_wait(
             [
                 asyncio.create_task(_notify(api, **coin))
-                async for coin in Coin.objects.filter(clients__isnull=False)
+                async for coin in Coin.objects.filter(
+                    clients__isnull=False,
+                    clients__client__alerts_enabled=True,
+                )
                 .values('chain')
                 .annotate(addresses=ArrayAgg('address', distinct=True))
             ],

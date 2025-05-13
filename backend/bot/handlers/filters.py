@@ -1,3 +1,6 @@
+from collections.abc import Callable
+from typing import Any
+
 from aiogram import F, Router, flags
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
@@ -13,7 +16,7 @@ router = Router()
 @router.message(Command('filters'))
 @router.callback_query(F.data == 'to_filters')
 @flags.with_client
-async def set_filters(
+async def set_filters_handler(
     msg: Message | CallbackQuery,
     state: FSMContext,
     client: Client,
@@ -37,7 +40,7 @@ async def set_filters(
 
 
 @router.callback_query(F.data.startswith('filter'))
-async def set_filters_2(query: CallbackQuery, state: FSMContext):
+async def set_filters_handler_2(query: CallbackQuery, state: FSMContext):
     texts = {
         'max_coin_price': 'Введите максимальную цену монеты. Пример: 4.5',
         'min_coin_market_cap': (
@@ -54,52 +57,85 @@ async def set_filters_2(query: CallbackQuery, state: FSMContext):
     )
 
 
-@router.message(F.text, StateFilter(FiltersState.max_coin_price))
-async def set_max_coin_price(msg: Message):
+async def parse_message(
+    msg: Message,
+    *,
+    parse_func: Callable[[str], Any],
+    exceptions=(ValueError,),
+) -> Any:
     try:
-        max_coin_price = float(msg.text)
-    except ValueError:
-        await msg.answer('Вы ввели некорректное число. Попробуйте еще раз')
+        value = parse_func(msg.text)
+        return value
+    except exceptions:
+        return
+
+
+async def set_filter(
+    msg: Message,
+    state: FSMContext,
+    *,
+    field: str,
+    parse_func: Callable[[str], Any],
+    error_text: str,
+    success_text: Callable[[Any], str],
+    exceptions=(ValueError,),
+):
+    value = await parse_message(
+        msg,
+        parse_func=parse_func,
+        exceptions=exceptions,
+    )
+
+    if not value:
+        await msg.answer(error_text, reply_markup=to_filters_kb)
         return
 
     await Client.objects.filter(pk=msg.chat.id).aupdate(
-        max_coin_price=max_coin_price,
+        **{field: value},
     )
+
+    await state.clear()
     await msg.answer(
-        f'Теперь максимальная цена монеты равна {max_coin_price}',
+        success_text(value),
         reply_markup=to_filters_kb,
+    )
+
+
+@router.message(F.text, StateFilter(FiltersState.max_coin_price))
+async def set_max_coin_price(msg: Message, state: FSMContext):
+    await set_filter(
+        msg,
+        state,
+        field='max_coin_price',
+        parse_func=float,
+        error_text='Вы ввели некорректное число. Попробуйте еще раз',
+        success_text=lambda x: f'Теперь максимальная цена монеты равна {x}',
     )
 
 
 @router.message(F.text, StateFilter(FiltersState.min_coin_market_cap))
-async def set_min_coin_market_cap(msg: Message):
-    try:
-        min_coin_market_cap = float(msg.text)
-    except ValueError:
-        await msg.answer('Вы ввели некорректное число. Попробуйте еще раз')
-        return
-
-    await Client.objects.filter(pk=msg.chat.id).aupdate(
-        min_coin_market_cap=min_coin_market_cap,
-    )
-    await msg.answer(
-        f'Теперь минимальная капитализация монеты равна {min_coin_market_cap}',
-        reply_markup=to_filters_kb,
+async def set_min_coin_market_cap(msg: Message, state: FSMContext):
+    await set_filter(
+        msg,
+        state,
+        field='min_coin_market_cap',
+        parse_func=float,
+        error_text='Вы ввели некорректное число. Попробуйте еще раз',
+        success_text=lambda x: (
+            f'Теперь минимальная капитализация монеты равна {x}'
+        ),
     )
 
 
 @router.message(F.text, StateFilter(FiltersState.min_coin_age))
-async def set_min_coin_age(msg: Message):
-    try:
-        min_coin_age = int(msg.text)
-    except ValueError:
-        await msg.answer('Вы ввели некорректное число. Попробуйте еще раз')
-        return
-
-    await Client.objects.filter(pk=msg.chat.id).aupdate(
-        min_coin_age=min_coin_age,
-    )
-    await msg.answer(
-        f'Теперь минимальный возраст монеты равен {min_coin_age} минут',
-        reply_markup=to_filters_kb,
+async def set_min_coin_age(msg: Message, state: FSMContext):
+    await set_filter(
+        msg,
+        state,
+        field='min_coin_age',
+        parse_func=int,
+        error_text='Вы ввели некорректное число. Попробуйте еще раз',
+        success_text=lambda x: (
+            f'Теперь минимальный возраст монеты равен {x} минут'
+        ),
     )
