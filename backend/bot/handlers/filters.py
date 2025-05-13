@@ -1,10 +1,7 @@
-from datetime import timedelta
-
 from aiogram import F, Router, flags
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
-from django.utils.timezone import now
 
 from bot.keyboards.inline import filters_kb, to_filters_kb
 from bot.states import FiltersState
@@ -24,6 +21,9 @@ async def set_filters(
     answer_func = (
         msg.answer if isinstance(msg, Message) else msg.message.edit_text
     )
+    min_coin_age = (
+        f'{client.min_coin_age} минут' if client.min_coin_age else 'Нет'
+    )
     await state.clear()
     await answer_func(
         'Ваши фильтры:\n'
@@ -31,8 +31,7 @@ async def set_filters(
         f'{client.max_coin_price or "Нет"}\n'
         f'Минимальная капитализация монеты: '
         f'{client.min_coin_market_cap or "Нет"}\n'
-        f'Минимальный возраст монеты: '
-        f'{f"{client.min_coin_age} минут" or "Нет"}\n',
+        f'Минимальный возраст монеты: {min_coin_age}\n',
         reply_markup=filters_kb,
     )
 
@@ -44,9 +43,7 @@ async def set_filters_2(query: CallbackQuery, state: FSMContext):
         'min_coin_market_cap': (
             'Введите минимальную рыночную капитализацию монеты. Пример: 1000'
         ),
-        'min_coin_age': (
-            'Введите минимальный возраст монеты в минутах.\n'
-        ),
+        'min_coin_age': 'Введите минимальный возраст монеты в минутах.',
     }
 
     coin_filter = query.data.split(':')[-1]
