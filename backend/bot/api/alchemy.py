@@ -77,6 +77,8 @@ class AlchemyAPI(APIClient):
             },
         ) as rsp:
             data = await rsp.json()
+            s = 'So11111111111111111111111111111111111111112'
+            through_pool = False
 
             if not data.get('result'):
                 logger.info(data)
@@ -96,8 +98,8 @@ class AlchemyAPI(APIClient):
                 logger.info(f'Error {err}')
                 return
 
+            meta = data['result']['meta']
             try:
-                meta = data['result']['meta']
                 pre_token_balance = [
                     i
                     for i in meta['preTokenBalances']
@@ -110,11 +112,34 @@ class AlchemyAPI(APIClient):
                     if i['owner'] == wallet_address
                 ][0]
             except IndexError:
-                return
+                for b in meta['preTokenBalances']:
+                    try:
+                        pre_token_balance = [
+                            i
+                            for i in meta['preTokenBalances']
+                            if i['owner'] == b['owner']
+                            if i['mint'] != s
+                        ][0]
+
+                        post_token_balance = [
+                            i
+                            for i in meta['postTokenBalances']
+                            if i['owner'] == b['owner']
+                            if i['mint'] != s
+                        ][0]
+                        through_pool = True
+                        break
+                    except IndexError:
+                        continue
+                else:
+                    return
 
             token_amount = (
                 post_token_balance['uiTokenAmount']['uiAmount'] or 0
             ) - (pre_token_balance['uiTokenAmount']['uiAmount'] or 0)
+
+            if through_pool:
+                token_amount = abs(token_amount)
 
             return TransactionData(
                 wallet_address=wallet_address,
