@@ -24,6 +24,11 @@ async def set_filters(
     answer_func = (
         msg.answer if isinstance(msg, Message) else msg.message.edit_text
     )
+    max_coin_creation_date_str = (
+        client.max_coin_creation_date.strftime(settings.DATE_FMT)
+        if client.max_coin_creation_date
+        else 'Нет'
+    )
     await state.clear()
     await answer_func(
         'Ваши фильтры:\n'
@@ -32,7 +37,7 @@ async def set_filters(
         f'Минимальная капитализация монеты: '
         f'{client.min_coin_market_cap or "Нет"}\n'
         f'Максимальная дата создания монеты: '
-        f'{client.max_coin_creation_date.strftime(settings.DATE_FMT) if client.max_coin_creation_date else "Нет"}\n',
+        f'{max_coin_creation_date_str}\n',
         reply_markup=filters_kb,
     )
 

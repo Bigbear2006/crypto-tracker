@@ -1,4 +1,5 @@
 import asyncio
+import time
 from asyncio import ALL_COMPLETED
 from datetime import UTC, datetime
 from itertools import groupby
@@ -9,9 +10,16 @@ from django.contrib.postgres.aggregates import ArrayAgg
 from django.db.models import Q
 
 from bot.api.alchemy import AlchemyAPI
+from bot.api.dexscreener import DexscreenerAPI
 from bot.exceptions import CoinNotFound
 from bot.loader import bot, logger, loop
-from bot.schemas import CoinHistory, CoinInputData, CoinPrice, TransactionData
+from bot.schemas import (
+    CoinHistory,
+    CoinInputData,
+    CoinPrice,
+    HistoricalPrice,
+    TransactionData,
+)
 from bot.settings import settings
 from core.models import (
     Client,
@@ -136,13 +144,14 @@ async def get_wallet_new_transactions(
         return tr
 
     transactions = await api.get_signatures(wallet.address)
-    # if wallet.address == 'HSYkA267XP4uiQjEcjAhbJfySvptQzRgBG3XPZpZJqxf':
-    #     transactions = ['test_000']
     already_sent_transactions = await sync_to_async(
         lambda: list(
-            Transaction.objects.filter(wallet=wallet, signature__in=transactions)
+            Transaction.objects.filter(
+                wallet=wallet,
+                signature__in=transactions,
+            )
             .order_by('-date')
-            .values_list('signature',flat=True)[:20],
+            .values_list('signature', flat=True)[:20],
         ),
     )()
 
@@ -164,20 +173,43 @@ async def filter_wallet_transactions(
     prices = await api.get_historical_prices('solana-mainnet', token_address)
 
     if not prices:
-        await Transaction.objects.abulk_create(
-            [
-                Transaction(
-                    wallet=await Wallet.objects.aget(
-                        address=tx.wallet_address,
-                    ),
-                    coin_amount=tx.token_amount,
-                    date=datetime.fromtimestamp(tx.timestamp, tz=UTC),
-                    signature=tx.signature,
+        async with DexscreenerAPI() as dex_api:
+            try:
+                coin_price = await api.get_coin_price(
+                    'solana-mainnet',
+                    token_address,
                 )
-                for tx in tx_list
-            ],
-        )
-        return []
+                coin_info = await dex_api.get_coin_info(
+                    'solana',
+                    token_address,
+                )
+                prices = CoinHistory(
+                    token_address,
+                    'solana-mainnet',
+                    [
+                        HistoricalPrice(
+                            price=str(coin_price.price),
+                            timestamp=str(time.time()),
+                            market_cap=coin_info.market_cap,
+                        ),
+                    ],
+                )
+                logger.info(prices)
+            except CoinNotFound:
+                await Transaction.objects.abulk_create(
+                    [
+                        Transaction(
+                            wallet=await Wallet.objects.aget(
+                                address=tx.wallet_address,
+                            ),
+                            coin_amount=tx.token_amount,
+                            date=datetime.fromtimestamp(tx.timestamp, tz=UTC),
+                            signature=tx.signature,
+                        )
+                        for tx in tx_list
+                    ],
+                )
+                return []
 
     try:
         coin = await Coin.objects.aget_or_create(token_address, 'solana')

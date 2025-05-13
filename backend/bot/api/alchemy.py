@@ -86,15 +86,6 @@ class AlchemyAPI(APIClient):
                 logger.info(err)
                 return
 
-            # if signature == 'test_000':
-            #     return TransactionData(
-            #         wallet_address='HSYkA267XP4uiQjEcjAhbJfySvptQzRgBG3XPZpZJqxf',
-            #         token_address='6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN',
-            #         token_amount=12.56,
-            #         timestamp=1746282199,
-            #         signature='test_000',
-            #     )
-
             if rsp.status == 429:
                 retry_after = int(rsp.headers.get('Retry-After', 10))
                 logger.debug(f'Sleep {retry_after} seconds...')
@@ -182,6 +173,10 @@ class AlchemyAPI(APIClient):
         ) as rsp:
             data = await rsp.json()
             logger.debug(data)
+
+        if not data.get('data'):
+            logger.info(data)
+            return []
 
         return [
             CoinPrice(
