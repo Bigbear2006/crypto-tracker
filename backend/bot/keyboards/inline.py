@@ -96,7 +96,7 @@ filters_kb = InlineKeyboardMarkup(
         [
             InlineKeyboardButton(
                 text='Минимальный возраст монеты',
-                callback_data='filter:max_coin_creation_date',
+                callback_data='filter:min_coin_age',
             ),
         ],
     ],

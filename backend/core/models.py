@@ -170,8 +170,8 @@ class Client(models.Model):
         null=True,
         blank=True,
     )
-    max_coin_creation_date = models.DateTimeField(
-        'Максимальная дата создания монеты',
+    min_coin_age = models.IntegerField(
+        'Минимальный возраст монеты',
         null=True,
         blank=True,
     )

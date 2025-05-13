@@ -1,12 +1,12 @@
-from datetime import UTC, datetime
+from datetime import timedelta
 
 from aiogram import F, Router, flags
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
+from django.utils.timezone import now
 
 from bot.keyboards.inline import filters_kb, to_filters_kb
-from bot.settings import settings
 from bot.states import FiltersState
 from core.models import Client
 
@@ -24,11 +24,6 @@ async def set_filters(
     answer_func = (
         msg.answer if isinstance(msg, Message) else msg.message.edit_text
     )
-    max_coin_creation_date_str = (
-        client.max_coin_creation_date.strftime(settings.DATE_FMT)
-        if client.max_coin_creation_date
-        else 'Нет'
-    )
     await state.clear()
     await answer_func(
         'Ваши фильтры:\n'
@@ -36,8 +31,8 @@ async def set_filters(
         f'{client.max_coin_price or "Нет"}\n'
         f'Минимальная капитализация монеты: '
         f'{client.min_coin_market_cap or "Нет"}\n'
-        f'Максимальная дата создания монеты: '
-        f'{max_coin_creation_date_str}\n',
+        f'Минимальный возраст монеты: '
+        f'{f"{client.min_coin_age} минут" or "Нет"}\n',
         reply_markup=filters_kb,
     )
 
@@ -49,8 +44,8 @@ async def set_filters_2(query: CallbackQuery, state: FSMContext):
         'min_coin_market_cap': (
             'Введите минимальную рыночную капитализацию монеты. Пример: 1000'
         ),
-        'max_coin_creation_date': (
-            'Введите максимальную дату создания монеты в формате ДД.ММ.ГГГГ.\n'
+        'min_coin_age': (
+            'Введите минимальный возраст монеты в минутах.\n'
         ),
     }
 
@@ -96,22 +91,18 @@ async def set_min_coin_market_cap(msg: Message):
     )
 
 
-@router.message(F.text, StateFilter(FiltersState.max_coin_creation_date))
-async def set_max_coin_creation_date(msg: Message):
+@router.message(F.text, StateFilter(FiltersState.min_coin_age))
+async def set_min_coin_age(msg: Message):
     try:
-        max_coin_creation_date = datetime.strptime(
-            msg.text,
-            settings.DATE_FMT,
-        ).replace(tzinfo=UTC)
+        min_coin_age = int(msg.text)
     except ValueError:
-        await msg.answer('Вы ввели некорректную дату. Попробуйте еще раз')
+        await msg.answer('Вы ввели некорректное число. Попробуйте еще раз')
         return
 
     await Client.objects.filter(pk=msg.chat.id).aupdate(
-        max_coin_creation_date=max_coin_creation_date,
+        min_coin_age=min_coin_age,
     )
     await msg.answer(
-        f'Теперь максимальная дата создания монеты равна '
-        f'{max_coin_creation_date.strftime(settings.DATE_FMT)}',
+        f'Теперь минимальный возраст монеты равен {min_coin_age} минут',
         reply_markup=to_filters_kb,
     )

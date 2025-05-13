@@ -15,4 +15,4 @@ class CoinState(StatesGroup):
 class FiltersState(StatesGroup):
     max_coin_price = State()
     min_coin_market_cap = State()
-    max_coin_creation_date = State()
+    min_coin_age = State()

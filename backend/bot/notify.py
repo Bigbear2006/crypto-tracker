@@ -256,8 +256,12 @@ async def send_wallet_transaction(
                 | Q(max_coin_price__isnull=True),
                 Q(min_coin_market_cap__lte=history.market_cap)
                 | Q(min_coin_market_cap__isnull=True),
-                Q(max_coin_creation_date__gte=coin.created_at)
-                | Q(max_coin_creation_date__isnull=True),
+                Q(
+                    min_coin_age__lte=(
+                        datetime.now() - coin.created_at
+                    ).total_seconds() // 60,
+                )
+                | Q(min_coin_age__isnull=True),
                 wallets__wallet=wallet,
                 alerts_enabled=True,
             )
