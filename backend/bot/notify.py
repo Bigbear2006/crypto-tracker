@@ -1,13 +1,14 @@
 import asyncio
 import time
 from asyncio import ALL_COMPLETED
+from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from itertools import groupby
 
 from aiogram.exceptions import TelegramBadRequest, TelegramRetryAfter
 from asgiref.sync import sync_to_async
 from django.contrib.postgres.aggregates import ArrayAgg
-from django.db.models import Q
+from django.db.models import ExpressionWrapper, F, FloatField, Q
 
 from bot.api.alchemy import AlchemyAPI
 from bot.api.dexscreener import DexscreenerAPI
@@ -80,11 +81,21 @@ async def send_coin_message(coin_price: CoinPrice):
     clients = Client.objects.filter(
         Q(
             coins__tracking_param=CoinTrackingParams.PRICE_UP,
-            coins__tracking_price__lte=coin_price.price,
+            coins__percentage__lte=ExpressionWrapper(
+                (coin_price.price - F('coins__start_price'))
+                / F('coins__start_price')
+                * 100,
+                output_field=FloatField(),
+            ),
         )
         | Q(
             coins__tracking_param=CoinTrackingParams.PRICE_DOWN,
-            coins__tracking_price__gte=coin_price.price,
+            coins__percentage__gte=ExpressionWrapper(
+                (F('coins__start_price') - coin_price.price)
+                / F('coins__start_price')
+                * 100,
+                output_field=FloatField(),
+            ),
         ),
         coins__coin__address=coin_price.address,
         coins__notification_sent=False,
@@ -313,13 +324,24 @@ async def notify_wallets_transactions():
         logger.info('There are no new transactions')
 
 
-async def notify():
+async def run_loop_task(
+    func: Callable[[], Awaitable[None]],
+    *,
+    timeout: int = settings.NOTIFY_TIMEOUT,
+):
     try:
-        await notify_coins_prices_changes()
-        await asyncio.sleep(settings.NOTIFY_TIMEOUT)
-        await notify_wallets_transactions()
-        await asyncio.sleep(settings.NOTIFY_TIMEOUT)
+        await func()
+        await asyncio.sleep(timeout)
     except Exception as e:
-        logger.info(f'Error during notifying: {str(e)}')
-        await asyncio.sleep(settings.NOTIFY_TIMEOUT)
-    loop.create_task(notify())
+        logger.info(f'Error in {func.__name__}: {str(e)}')
+        await asyncio.sleep(timeout)
+    finally:
+        loop.create_task(run_loop_task(func, timeout=timeout))
+
+
+async def notify_coins():
+    await run_loop_task(notify_coins_prices_changes)
+
+
+async def notify_wallets():
+    await run_loop_task(notify_wallets_transactions)

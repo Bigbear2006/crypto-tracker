@@ -14,7 +14,7 @@ async def main():
 
     from bot.handlers import alerts, base, coin, filters, wallet
     from bot.middlewares import WithClientMiddleware
-    from bot.notify import notify  # noqa
+    from bot.notify import notify_coins, notify_wallets
 
     dp.include_routers(
         base.router,
@@ -59,7 +59,8 @@ async def main():
     )
 
     logger.info('Starting bot...')
-    loop.create_task(notify())
+    loop.create_task(notify_coins())
+    loop.create_task(notify_wallets())
     await dp.start_polling(bot)
 
 

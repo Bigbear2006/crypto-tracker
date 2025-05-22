@@ -52,7 +52,7 @@ coin_kb = InlineKeyboardMarkup(
         [
             InlineKeyboardButton(
                 text='Отслеживаемая цена',
-                callback_data='set_coin_tracking_price',
+                callback_data='set_coin_percentage',
             ),
         ],
         [
@@ -97,6 +97,12 @@ filters_kb = InlineKeyboardMarkup(
             InlineKeyboardButton(
                 text='Минимальный возраст монеты',
                 callback_data='filter:min_coin_age',
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text='Максимальный возраст монеты',
+                callback_data='filter:max_coin_age',
             ),
         ],
     ],

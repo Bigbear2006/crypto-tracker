@@ -8,6 +8,7 @@ from aiogram.types import CallbackQuery, Message
 
 from bot.keyboards.inline import filters_kb, to_filters_kb
 from bot.states import FiltersState
+from bot.text_utils import age_to_str, parse_age, price_to_str
 from core.models import Client
 
 router = Router()
@@ -24,17 +25,15 @@ async def set_filters_handler(
     answer_func = (
         msg.answer if isinstance(msg, Message) else msg.message.edit_text
     )
-    min_coin_age = (
-        f'{client.min_coin_age} минут' if client.min_coin_age else 'Нет'
-    )
     await state.clear()
     await answer_func(
         'Ваши фильтры:\n'
         f'Максимальная цена монеты: '
-        f'{client.max_coin_price or "Нет"}\n'
+        f'{price_to_str(client.max_coin_price)}\n'
         f'Минимальная капитализация монеты: '
-        f'{client.min_coin_market_cap or "Нет"}\n'
-        f'Минимальный возраст монеты: {min_coin_age}\n',
+        f'{price_to_str(client.min_coin_market_cap)}\n'
+        f'Минимальный возраст монеты: {age_to_str(client.min_coin_age)}\n'
+        f'Максимальный возраст монеты: {age_to_str(client.max_coin_age)}\n',
         reply_markup=filters_kb,
     )
 
@@ -46,7 +45,14 @@ async def set_filters_handler_2(query: CallbackQuery, state: FSMContext):
         'min_coin_market_cap': (
             'Введите минимальную рыночную капитализацию монеты. Пример: 1000'
         ),
-        'min_coin_age': 'Введите минимальный возраст монеты в минутах.',
+        'min_coin_age': (
+            'Введите минимальный возраст монеты. '
+            'Примеры: 15 минут, 2 часа, 1 день.'
+        ),
+        'max_coin_age': (
+            'Введите максимальный возраст монеты. '
+            'Примеры: 15 минут, 2 часа, 1 день.'
+        ),
     }
 
     coin_filter = query.data.split(':')[-1]
@@ -133,9 +139,23 @@ async def set_min_coin_age(msg: Message, state: FSMContext):
         msg,
         state,
         field='min_coin_age',
-        parse_func=int,
+        parse_func=parse_age,
         error_text='Вы ввели некорректное число. Попробуйте еще раз',
         success_text=lambda x: (
-            f'Теперь минимальный возраст монеты равен {x} минут'
+            f'Теперь минимальный возраст монеты равен {age_to_str(x)}'
+        ),
+    )
+
+
+@router.message(F.text, StateFilter(FiltersState.max_coin_age))
+async def set_max_coin_age(msg: Message, state: FSMContext):
+    await set_filter(
+        msg,
+        state,
+        field='max_coin_age',
+        parse_func=parse_age,
+        error_text='Вы ввели некорректное число. Попробуйте еще раз',
+        success_text=lambda x: (
+            f'Теперь максимальный возраст монеты равен {age_to_str(x)}'
         ),
     )

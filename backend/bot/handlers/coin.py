@@ -111,12 +111,17 @@ async def coin_detail(query: CallbackQuery, state: FSMContext):
     else:
         tracking_param = 'Нет'
 
+    if client_coin.percentage:
+        percentage = f'{client_coin.percentage}%'
+    else:
+        percentage = 'Нет'
+
     await state.update_data(coin_id=coin.pk, coin_address=coin.address)
     await query.message.edit_text(
         f'Монета {coin.symbol} ({coin.name})\n'
         f'Адрес: {coin.address}\n\n'
         f'Параметр отслеживания: {tracking_param}\n'
-        f'Отслеживаемая цена: {client_coin.tracking_price or "Нет"}',
+        f'Отслеживаемое изменение цены: {percentage}',
         reply_markup=coin_kb,
     )
 
@@ -168,82 +173,52 @@ async def set_coin_tracking_params(query: CallbackQuery, state: FSMContext):
         pass
 
 
-@router.callback_query(F.data == 'set_coin_tracking_price')
-async def set_coin_tracking_price(query: CallbackQuery, state: FSMContext):
-    await state.set_state(CoinState.tracking_price)
+@router.callback_query(F.data == 'set_coin_percentage')
+async def set_coin_percentage(query: CallbackQuery, state: FSMContext):
+    await state.set_state(CoinState.percentage)
     await query.message.answer(
-        'Введите цену для уведомления. Пример: 1.02',
+        'Введите изменение цены для уведомления в процентах '
+        '(можно отрицательное).\nПример: 10',
         reply_markup=cancel_kb,
     )
 
 
-@router.message(F.text, StateFilter(CoinState.tracking_price))
-async def set_coin_tracking_price_2(msg: Message, state: FSMContext):
+@router.message(F.text, StateFilter(CoinState.percentage))
+async def set_coin_percentage_2(msg: Message, state: FSMContext):
     try:
-        tracking_price = float(msg.text)
+        percentage = int(msg.text)
     except ValueError:
         await msg.answer(
-            'Вы ввели некорректную цену, попробуйте еще раз',
+            'Вы ввели некорректное число, попробуйте еще раз',
             reply_markup=cancel_kb,
         )
         return
 
-    tracking_param = ''
-    text = f'Теперь отслеживаемая цена этой монеты: {tracking_price}\n'
     coin = await Coin.objects.aget(pk=await state.get_value('coin_id'))
-    client_coin = await ClientCoin.objects.aget(
-        coin=coin,
-        client_id=msg.chat.id,
-    )
     async with AlchemyAPI() as api:
         coin_price = await api.get_coin_price(coin.chain, coin.address)
 
-    if client_coin.tracking_param:
-        if (
-            client_coin.tracking_param == CoinTrackingParams.PRICE_UP
-            and tracking_price <= coin_price.price
-        ):
-            param_str = 'больше'
-        elif (
-            client_coin.tracking_param == CoinTrackingParams.PRICE_DOWN
-            and tracking_price >= coin_price.price
-        ):
-            param_str = 'меньше'
-        else:
-            param_str = None
-
-        if param_str:
-            await msg.answer(
-                f'Текущая цена монеты (${coin_price.price}) '
-                f'уже {param_str} или равна указанному значению'
-                f' (${tracking_price})\n'
-                f'Укажите другую цену или измените '
-                f'параметр отслеживания в настройках',
-                reply_markup=cancel_kb,
-            )
-            return
-    else:
-        tracking_param = (
-            CoinTrackingParams.PRICE_UP
-            if tracking_price > coin_price.price
-            else CoinTrackingParams.PRICE_DOWN
-        )
-        text += (
-            f'Автоматически установлен параметр отслеживания: '
-            f'{tracking_param.label}'
-        )
+    tracking_param = (
+        CoinTrackingParams.PRICE_UP
+        if percentage > 0
+        else CoinTrackingParams.PRICE_DOWN
+    )
 
     await ClientCoin.objects.filter(
         coin=coin,
         client_id=msg.chat.id,
     ).aupdate(
-        tracking_price=tracking_price,
+        start_price=coin_price.price,
+        tracking_param=tracking_param,
+        percentage=abs(percentage),
         notification_sent=False,
-        **{'tracking_param': tracking_param} if tracking_param else {},
     )
 
     await msg.answer(
-        text,
+        f'Теперь отслеживаемое изменение цены этой монеты: '
+        f'{abs(percentage)}%\n'
+        f'Автоматически установлен параметр отслеживания: '
+        f'{tracking_param.label}',
         reply_markup=one_button_keyboard(
             text='Назад',
             callback_data=f'coin_{coin.pk}',

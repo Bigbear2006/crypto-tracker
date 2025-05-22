@@ -9,10 +9,11 @@ class WalletState(StatesGroup):
 class CoinState(StatesGroup):
     address = State()
     chain = State()
-    tracking_price = State()
+    percentage = State()
 
 
 class FiltersState(StatesGroup):
     max_coin_price = State()
     min_coin_market_cap = State()
     min_coin_age = State()
+    max_coin_age = State()

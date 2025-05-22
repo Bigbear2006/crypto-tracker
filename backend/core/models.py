@@ -175,8 +175,14 @@ class Client(models.Model):
         null=True,
         blank=True,
     )
+    # in minutes
     min_coin_age = models.IntegerField(
         'Минимальный возраст монеты',
+        null=True,
+        blank=True,
+    )
+    max_coin_age = models.IntegerField(
+        'Максимальный возраст монеты',
         null=True,
         blank=True,
     )
@@ -271,8 +277,9 @@ class ClientCoin(models.Model):
         choices=CoinTrackingParams,
         blank=True,
     )
-    tracking_price = models.FloatField(
-        'Отслеживаемая цена',
+    start_price = models.FloatField('Начальная цена', null=True, blank=True)
+    percentage = models.IntegerField(
+        'Отслеживаемое изменение цены в %',
         null=True,
         blank=True,
     )
