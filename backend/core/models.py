@@ -98,6 +98,7 @@ class CoinManager(models.Manager):
                     name=coin_info.name,
                     symbol=coin_info.symbol,
                     logo=coin_info.logo,
+                    pair_address=coin_info.pair_address,
                     created_at=coin_info.created_at,
                 )
         return coin
@@ -221,6 +222,7 @@ class Coin(models.Model):
     name = models.CharField('Название', max_length=255, blank=True)
     symbol = models.CharField('Символ', max_length=255, blank=True)
     logo = models.URLField('Лого', blank=True)
+    pair_address = models.CharField('Адрес пула', max_length=255)
     created_at = models.DateTimeField('Дата создания монеты')
     objects = CoinManager()
 

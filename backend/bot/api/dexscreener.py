@@ -27,6 +27,7 @@ class DexscreenerAPI(APIClient):
                     symbol=i['baseToken']['symbol'],
                     logo=i.get('info', {}).get('imageUrl', ''),
                     name=i['baseToken']['name'],
+                    pair_address=i['pairAddress'],
                     created_at=datetime.fromtimestamp(
                         i['pairCreatedAt'] / 1000,
                         tz=UTC,

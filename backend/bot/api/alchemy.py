@@ -1,7 +1,8 @@
-import asyncio
 from dataclasses import asdict
 from datetime import timedelta
 
+from django.apps import apps
+from django.core.exceptions import ObjectDoesNotExist
 from django.utils.timezone import now
 
 from bot.api.base import APIClient
@@ -16,11 +17,15 @@ from bot.schemas import (
 )
 from bot.settings import settings
 
+alchemy_chains = {
+    'solana': 'solana-mainnet',
+    'ethereum': 'eth-mainnet',
+    'base': 'base-mainnet',
+    'blast': 'blast-mainnet',
+}
+
 
 class AlchemyAPI(APIClient):
-    def __init__(self, **session_kwargs):
-        super().__init__(**session_kwargs)
-
     async def get_signatures(
         self,
         address: str,
@@ -42,12 +47,6 @@ class AlchemyAPI(APIClient):
         ) as rsp:
             data = await rsp.json()
             logger.debug(data)
-
-            if rsp.status == 429:
-                retry_after = int(rsp.headers.get('Retry-After', 10))
-                logger.debug(f'Sleep {retry_after} seconds...')
-                await asyncio.sleep(retry_after)
-                await self.get_signatures(address, limit=limit)
 
             if err := data.get('error'):
                 logger.info(f'Error {err}')
@@ -77,8 +76,6 @@ class AlchemyAPI(APIClient):
             },
         ) as rsp:
             data = await rsp.json()
-            s = 'So11111111111111111111111111111111111111112'
-            through_pool = False
 
             if not data.get('result'):
                 logger.info(data)
@@ -88,63 +85,52 @@ class AlchemyAPI(APIClient):
                 logger.info(err)
                 return
 
-            if rsp.status == 429:
-                retry_after = int(rsp.headers.get('Retry-After', 10))
-                logger.debug(f'Sleep {retry_after} seconds...')
-                await asyncio.sleep(retry_after)
-                await self.get_transaction(wallet_address, signature)
-
             if err := data.get('error'):
                 logger.info(f'Error {err}')
                 return
 
             meta = data['result']['meta']
-            try:
-                pre_token_balance = [
-                    i
-                    for i in meta['preTokenBalances']
-                    if i['owner'] == wallet_address
-                ][0]
+            token_address = token_address_from_meta(meta)
+            balance_change = get_token_balance_change(meta, wallet_address)
 
-                post_token_balance = [
-                    i
-                    for i in meta['postTokenBalances']
-                    if i['owner'] == wallet_address
-                ][0]
-            except IndexError:
-                for b in meta['preTokenBalances']:
-                    try:
-                        pre_token_balance = [
-                            i
-                            for i in meta['preTokenBalances']
-                            if i['owner'] == b['owner']
-                            if i['mint'] != s
-                        ][0]
-
-                        post_token_balance = [
-                            i
-                            for i in meta['postTokenBalances']
-                            if i['owner'] == b['owner']
-                            if i['mint'] != s
-                        ][0]
-                        through_pool = True
-                        break
-                    except IndexError:
-                        continue
-                else:
+            if balance_change is None:
+                Coin = apps.get_model('core', 'Coin')
+                try:
+                    coin = await Coin.objects.aget_or_create(
+                        token_address,
+                        'solana',
+                    )
+                    balance_change = get_token_balance_change(
+                        meta,
+                        coin.pair_address,
+                    )
+                except (ObjectDoesNotExist, CoinNotFound):
+                    logger.info(f'Coin {token_address} not found')
                     return
 
-            token_amount = (
-                post_token_balance['uiTokenAmount']['uiAmount'] or 0
-            ) - (pre_token_balance['uiTokenAmount']['uiAmount'] or 0)
+            if balance_change is None:
+                logger.info(
+                    f'[attempt 2] Cannot get balance change '
+                    f'in transaction {signature}',
+                )
 
-            if through_pool:
-                token_amount = abs(token_amount)
+                for i in meta['preTokenBalances']:
+                    balance_change = get_token_balance_change(meta, i['owner'])
+                    if balance_change:
+                        balance_change = abs(balance_change)
+                        break
+
+            if balance_change is None:
+                logger.info(
+                    f'[attempt 3] Cannot get balance change '
+                    f'in transaction {signature}',
+                )
+                return
 
             return TransactionData(
                 wallet_address=wallet_address,
-                token_address=pre_token_balance['mint'],
-                token_amount=token_amount,
+                token_address=token_address,
+                token_amount=balance_change,
                 timestamp=data['result']['blockTime'],
                 signature=signature,
             )
@@ -220,9 +206,34 @@ class AlchemyAPI(APIClient):
         return coins[0]
 
 
-alchemy_chains = {
-    'solana': 'solana-mainnet',
-    'ethereum': 'eth-mainnet',
-    'base': 'base-mainnet',
-    'blast': 'blast-mainnet',
-}
+def get_token_balance_change(meta: dict, owner: str) -> float | None:
+    try:
+        pre_token_balance = [
+            i
+            for i in meta['preTokenBalances']
+            if i['owner'] == owner
+            if i['mint'] != settings.WSOL_ADDRESS
+        ][0]
+
+        post_token_balance = [
+            i
+            for i in meta['postTokenBalances']
+            if i['owner'] == owner
+            if i['mint'] != settings.WSOL_ADDRESS
+        ][0]
+
+        return (pre_token_balance['uiTokenAmount']['uiAmount'] or 0) - (
+            post_token_balance['uiTokenAmount']['uiAmount'] or 0
+        )
+    except IndexError:
+        return
+
+
+def token_address_from_meta(meta: dict) -> str | None:
+    addresses = [
+        i['mint']
+        for i in meta['preTokenBalances']
+        if i['mint'] != settings.WSOL_ADDRESS
+    ]
+    if addresses:
+        return addresses[0]

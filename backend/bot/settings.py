@@ -13,6 +13,10 @@ class Settings:
     ALCHEMY_API_KEY: str = field(
         default_factory=lambda: env('ALCHEMY_API_KEY'),
     )
+
+    WSOL_ADDRESS: str = field(
+        default='So11111111111111111111111111111111111111112',
+    )
     NOTIFY_TIMEOUT: int = field(default=30)
     PAGE_SIZE: int = field(default=5)
     DATE_FMT: str = field(default='%d.%m.%Y')

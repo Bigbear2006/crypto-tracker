@@ -8,6 +8,7 @@ class CoinInfo:
     symbol: str
     logo: str
     name: str
+    pair_address: str
     created_at: datetime
     market_cap: int
     price: float

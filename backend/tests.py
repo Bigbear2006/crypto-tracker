@@ -1,6 +1,12 @@
 import asyncio
+import os
 
-from api.alchemy import AlchemyAPI
+import django
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
+django.setup()
+
+from bot.api.alchemy import AlchemyAPI  # noqa
 
 
 async def test_pool_transactions():
@@ -25,7 +31,22 @@ async def test_pool_transactions():
             '5CY89DZjc9nVdwTa8U1VadVsgAh64r78GBoDf3irmW7v',
             '4kfk58wzeVupNtvCTtvLMtVaxGvk99kANXQdEvb9aU3jt3xPJ5Uwg7rZjbGM9m1FP5R6YqYN5CBZxCFnDRDbcCnz',
         )
-        print(r1, r2, r3, r4, r5, sep='\n')
+    print(r1, r2, r3, r4, r5, sep='\n')
+
+
+async def test_instant_buy_sell_transactions():
+    async with AlchemyAPI() as api:
+        r1 = await api.get_transaction(
+            '4vJfp62jEzcYFnQ11oBJDgj6ZFrdEwcBBpoadNTpEWys',
+            '3GiBmoCPFjLuUTmKCqGX1AN8upuA3hyzNn7wZPd9S1FNBUqsbj6uPTWGQARoB8qFgGkBemYDoGL47oVrUivsiPRX',
+        )
+        r2 = await api.get_transaction(
+            '4vJfp62jEzcYFnQ11oBJDgj6ZFrdEwcBBpoadNTpEWys',
+            '2mvbDi2BjKKBf5rHpYztSNGvKDJ5qmvLRaPJcCH7vokmc4MwgaZdgJhcCC58Zoh3Tonc2Nscu1EUVWcqK2aQHkvr',
+        )
+    print(r1, r2, sep='\n')
 
 
 asyncio.run(test_pool_transactions())
+print('-' * 50)
+asyncio.run(test_instant_buy_sell_transactions())

@@ -7,7 +7,6 @@ admin.site.unregister(Group)
 
 admin.site.register(models.Client)
 admin.site.register(models.Wallet)
-admin.site.register(models.Coin)
 
 
 class CoinFilter(admin.SimpleListFilter):
@@ -26,6 +25,11 @@ class CoinFilter(admin.SimpleListFilter):
         if self.value() == 'null':
             return queryset.filter(coin__isnull=True)
         return queryset
+
+
+@admin.register(models.Coin)
+class CoinAdmin(admin.ModelAdmin):
+    search_fields = ('address',)
 
 
 @admin.register(models.ClientCoin)

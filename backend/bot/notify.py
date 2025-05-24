@@ -1,9 +1,11 @@
 import asyncio
 import time
+import traceback
 from asyncio import ALL_COMPLETED
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable, Coroutine
 from datetime import UTC, datetime
 from itertools import groupby
+from typing import Any
 
 from aiogram.exceptions import TelegramBadRequest, TelegramRetryAfter
 from asgiref.sync import sync_to_async
@@ -262,6 +264,7 @@ async def send_wallet_transaction(
         f'Общая сумма: ${tx.token_amount * history.price}'
     )
     wallet = await Wallet.objects.aget(address=tx.wallet_address)
+    coin_age = (datetime.now(UTC) - coin.created_at).total_seconds() // 60
     await asyncio_wait(
         [
             asyncio.create_task(safe_send_message(c.pk, text))
@@ -270,13 +273,8 @@ async def send_wallet_transaction(
                 | Q(max_coin_price__isnull=True),
                 Q(min_coin_market_cap__lte=history.market_cap)
                 | Q(min_coin_market_cap__isnull=True),
-                Q(
-                    min_coin_age__lte=(
-                        datetime.now(UTC) - coin.created_at
-                    ).total_seconds()
-                    // 60,
-                )
-                | Q(min_coin_age__isnull=True),
+                Q(min_coin_age__lte=coin_age) | Q(min_coin_age__isnull=True),
+                Q(max_coin_age__gte=coin_age) | Q(max_coin_age__isnull=True),
                 wallets__wallet=wallet,
                 alerts_enabled=True,
             )
@@ -325,7 +323,7 @@ async def notify_wallets_transactions():
 
 
 async def run_loop_task(
-    func: Callable[[], Awaitable[None]],
+    func: Callable[[], Coroutine[Any, Any, None]],
     *,
     timeout: int = settings.NOTIFY_TIMEOUT,
 ):
@@ -333,7 +331,7 @@ async def run_loop_task(
         await func()
         await asyncio.sleep(timeout)
     except Exception as e:
-        logger.info(f'Error in {func.__name__}: {str(e)}')
+        logger.info(f'Error in {func.__name__}: {traceback.format_exc()}')
         await asyncio.sleep(timeout)
     finally:
         loop.create_task(run_loop_task(func, timeout=timeout))
