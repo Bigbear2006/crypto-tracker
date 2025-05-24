@@ -91,6 +91,9 @@ class AlchemyAPI(APIClient):
 
             meta = data['result']['meta']
             token_address = token_address_from_meta(meta)
+            if not token_address:
+                logger.info(f'Token address not found in tx meta: {signature}')
+                return
             balance_change = get_token_balance_change(meta, wallet_address)
 
             if balance_change is None:

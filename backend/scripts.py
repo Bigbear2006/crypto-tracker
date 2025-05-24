@@ -3,6 +3,7 @@ import os
 
 import django
 from asgiref.sync import sync_to_async
+from django.db.models import Count
 
 from bot.loader import logger
 
@@ -46,5 +47,23 @@ async def update_coins_tokens_pairs():
     logger.info('update_coins_tokens_pairs completed!')
 
 
+def delete_duplicates():
+    duplicates = Coin.objects.values('address').annotate(count=Count('id')).filter(count__gt=1)
+    logger.info(f'Found {len(duplicates)}')
+    for i in duplicates:
+        Coin.objects.filter(address=i['address'])[1:].delete()
+    logger.info('All duplicates deleted!')
+
+
 if __name__ == '__main__':
-    asyncio.run(update_coins_tokens_pairs())
+    func = input(
+        'select function:\n'
+        '- update_coins_tokens_pairs\n'
+        '- delete_duplicates\n'
+    )
+    if func == 'update_coins_tokens_pairs':
+        asyncio.run(update_coins_tokens_pairs())
+    elif func == 'delete_duplicates':
+        delete_duplicates()
+    else:
+        print('Wrong function')
