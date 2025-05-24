@@ -48,11 +48,21 @@ async def update_coins_tokens_pairs():
 
 
 def delete_duplicates():
-    duplicates = Coin.objects.values('address').annotate(count=Count('id')).filter(count__gt=1)
+    duplicates = (
+        Coin.objects.values('address').annotate(count=Count('id'))
+        .filter(count__gt=1)
+    )
     logger.info(f'Found {len(duplicates)}')
+
+    ids_to_delete = []
     for i in duplicates:
-        Coin.objects.filter(address=i['address'])[1:].delete()
-    logger.info('All duplicates deleted!')
+        ids_to_delete.extend(
+            Coin.objects.filter(address=i['address'])
+            .values_list('id', flat=True)[1:]
+        )
+
+    Coin.objects.filter(pk__in=ids_to_delete).delete()
+    logger.info(f'{len(ids_to_delete)} duplicates deleted!')
 
 
 if __name__ == '__main__':
