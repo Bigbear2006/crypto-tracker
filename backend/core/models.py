@@ -1,7 +1,7 @@
 from aiogram import types
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import models
+from django.db import models, IntegrityError
 
 from bot.api.alchemy import AlchemyAPI, alchemy_chains
 from bot.api.dexscreener import DexscreenerAPI
@@ -84,24 +84,27 @@ class WalletManager(models.Manager):
 
 class CoinManager(models.Manager):
     async def aget_or_create(self, address: str, chain: str) -> 'Coin':
+        alchemy_chain = alchemy_chains[chain]
         try:
-            coin = await self.aget(
-                address=address,
-                chain=alchemy_chains[chain],
-            )
+            return await self.aget(address=address, chain=alchemy_chain)
         except ObjectDoesNotExist:
-            async with DexscreenerAPI() as api:
-                coin_info = await api.get_coin_info(chain, address)
-                coin = await self.acreate(
-                    address=address,
-                    chain=alchemy_chains[chain],
-                    name=coin_info.name,
-                    symbol=coin_info.symbol,
-                    logo=coin_info.logo,
-                    pair_address=coin_info.pair_address,
-                    created_at=coin_info.created_at,
-                )
-        return coin
+            pass
+
+        async with DexscreenerAPI() as api:
+            coin_info = await api.get_coin_info(chain, address)
+
+        try:
+            return await self.acreate(
+                address=address,
+                chain=alchemy_chain,
+                name=coin_info.name,
+                symbol=coin_info.symbol,
+                logo=coin_info.logo,
+                pair_address=coin_info.pair_address,
+                created_at=coin_info.created_at,
+            )
+        except IntegrityError:
+            return await self.aget(address=address, chain=alchemy_chain)
 
     async def add_to_client(
         self,
