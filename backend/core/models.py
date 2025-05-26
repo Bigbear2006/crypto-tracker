@@ -227,6 +227,7 @@ class Coin(models.Model):
     objects = CoinManager()
 
     class Meta:
+        unique_together = ('address', 'chain')
         verbose_name = 'Монета'
         verbose_name_plural = 'Монеты'
         ordering = ['symbol']

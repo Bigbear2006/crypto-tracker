@@ -330,7 +330,7 @@ async def run_loop_task(
     try:
         await func()
         await asyncio.sleep(timeout)
-    except Exception as e:
+    except (Exception,):
         logger.info(f'Error in {func.__name__}: {traceback.format_exc()}')
         await asyncio.sleep(timeout)
     finally:
