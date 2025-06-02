@@ -12,15 +12,15 @@ async def main():
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
     django.setup()
 
-    from bot.handlers import alerts, base, coin, filters, wallet
+    from bot.handlers import alerts, base, coin, filters, search, wallet
     from bot.middlewares import WithClientMiddleware
-    from bot.notify import notify_coins, notify_wallets
 
     dp.include_routers(
         base.router,
         wallet.router,
         coin.router,
         filters.router,
+        search.router,
         alerts.router,
     )
     dp.message.filter(F.chat.type == ChatType.PRIVATE)
@@ -51,6 +51,7 @@ async def main():
                 command='/filters',
                 description='Редактировать фильтры',
             ),
+            BotCommand(command='/search', description='Поиск монет'),
             BotCommand(
                 command='/toggle_alerts',
                 description='Вкл/выкл оповещения',
@@ -59,8 +60,8 @@ async def main():
     )
 
     logger.info('Starting bot...')
-    loop.create_task(notify_coins())
-    loop.create_task(notify_wallets())
+    # loop.create_task(notify_coins())
+    # loop.create_task(notify_wallets())
     await dp.start_polling(bot)
 
 

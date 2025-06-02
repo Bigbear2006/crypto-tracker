@@ -13,6 +13,9 @@ class Settings:
     ALCHEMY_API_KEY: str = field(
         default_factory=lambda: env('ALCHEMY_API_KEY'),
     )
+    BIRDEYE_API_KEY: str = field(
+        default_factory=lambda: env('BIRDEYE_API_KEY'),
+    )
 
     WSOL_ADDRESS: str = field(
         default='So11111111111111111111111111111111111111112',

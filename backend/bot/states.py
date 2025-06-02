@@ -17,3 +17,8 @@ class FiltersState(StatesGroup):
     min_coin_market_cap = State()
     min_coin_age = State()
     max_coin_age = State()
+
+
+class SearchState(StatesGroup):
+    min_liquidity = State()
+    extra_filters = State()

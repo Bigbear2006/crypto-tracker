@@ -1,11 +1,13 @@
 from aiogram import types
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import models, IntegrityError
+from django.db import IntegrityError, models
+from django.utils.timezone import now
 
 from bot.api.alchemy import AlchemyAPI, alchemy_chains
 from bot.api.dexscreener import DexscreenerAPI
 from bot.exceptions import WalletNotFound
+from bot.schemas import CoinInfo
 from core.choices import CoinTrackingParams
 
 
@@ -83,15 +85,21 @@ class WalletManager(models.Manager):
 
 
 class CoinManager(models.Manager):
-    async def aget_or_create(self, address: str, chain: str) -> 'Coin':
+    async def aget_or_create(
+        self,
+        address: str,
+        chain: str,
+        coin_info: CoinInfo | None = None,
+    ) -> 'Coin':
         alchemy_chain = alchemy_chains[chain]
         try:
             return await self.aget(address=address, chain=alchemy_chain)
         except ObjectDoesNotExist:
             pass
 
-        async with DexscreenerAPI() as api:
-            coin_info = await api.get_coin_info(chain, address)
+        if not coin_info:
+            async with DexscreenerAPI() as api:
+                coin_info = await api.get_coin_info(chain, address)
 
         try:
             return await self.acreate(
@@ -237,6 +245,10 @@ class Coin(models.Model):
 
     def __str__(self):
         return self.symbol
+
+    @property
+    def age(self):
+        return (now() - self.created_at).total_seconds() / 60
 
 
 class ClientWallet(models.Model):

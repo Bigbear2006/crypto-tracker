@@ -49,7 +49,8 @@ async def update_coins_tokens_pairs():
 
 def delete_duplicates():
     duplicates = (
-        Coin.objects.values('address').annotate(count=Count('id'))
+        Coin.objects.values('address')
+        .annotate(count=Count('id'))
         .filter(count__gt=1)
     )
     logger.info(f'Found {len(duplicates)}')
@@ -57,8 +58,10 @@ def delete_duplicates():
     ids_to_delete = []
     for i in duplicates:
         ids_to_delete.extend(
-            Coin.objects.filter(address=i['address'])
-            .values_list('id', flat=True)[1:]
+            Coin.objects.filter(address=i['address']).values_list(
+                'id',
+                flat=True,
+            )[1:],
         )
 
     Coin.objects.filter(pk__in=ids_to_delete).delete()
@@ -67,9 +70,7 @@ def delete_duplicates():
 
 if __name__ == '__main__':
     func = input(
-        'select function:\n'
-        '- update_coins_tokens_pairs\n'
-        '- delete_duplicates\n'
+        'select function:\n- update_coins_tokens_pairs\n- delete_duplicates\n',
     )
     if func == 'update_coins_tokens_pairs':
         asyncio.run(update_coins_tokens_pairs())

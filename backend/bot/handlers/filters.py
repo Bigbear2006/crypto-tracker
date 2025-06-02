@@ -7,6 +7,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
 from bot.keyboards.inline import filters_kb, to_filters_kb
+from bot.parse import parse_message
 from bot.states import FiltersState
 from bot.text_utils import age_to_str, parse_age, price_to_str
 from core.models import Client
@@ -63,19 +64,6 @@ async def set_filters_handler_2(query: CallbackQuery, state: FSMContext):
     )
 
 
-async def parse_message(
-    msg: Message,
-    *,
-    parse_func: Callable[[str], Any],
-    exceptions=(ValueError,),
-) -> Any:
-    try:
-        value = parse_func(msg.text)
-        return value
-    except exceptions:
-        return
-
-
 async def set_filter(
     msg: Message,
     state: FSMContext,
@@ -86,7 +74,7 @@ async def set_filter(
     success_text: Callable[[Any], str],
     exceptions=(ValueError,),
 ):
-    value = await parse_message(
+    value = parse_message(
         msg,
         parse_func=parse_func,
         exceptions=exceptions,

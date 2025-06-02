@@ -38,6 +38,7 @@ class DexscreenerAPI(APIClient):
                 )
                 for i in data
                 if i.get('marketCap')
+                if i.get('pairCreatedAt')
             ]
 
     async def get_coin_info(self, chain: str, address: str):

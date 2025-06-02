@@ -19,14 +19,14 @@ def parse_age(text: str) -> int | None:
         return age * 1440
 
 
-def age_to_str(age: int | None) -> str:
+def age_to_str(age: int | None, *, round_big: bool = False) -> str:
     if not age:
         return 'Нет'
 
-    if age > 1440 and age % 1440 == 0:
+    if age > 1440 and (round_big or age % 1440 == 0):
         return f'{age // 1440} дней'
 
-    if age > 60 and age % 60 == 0:
+    if age > 60 and (round_big or age % 60 == 0):
         return f'{age // 60} часов'
 
     return f'{age} минут'

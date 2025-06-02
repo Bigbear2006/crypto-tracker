@@ -135,6 +135,45 @@ chains_kb = InlineKeyboardMarkup(
     ],
 )
 
+search_kb = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text='Показать результаты',
+                callback_data='show_search_results',
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text='Мин. цена монеты',
+                callback_data='search_filter:min_price',
+            ),
+            InlineKeyboardButton(
+                text='Макс. цена монеты',
+                callback_data='search_filter:max_price',
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text='Мин. возраст Монеты',
+                callback_data='search_filter:min_age',
+            ),
+            InlineKeyboardButton(
+                text='Макс. возраст Монеты',
+                callback_data='search_filter:max_age',
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text='Капитализация монеты',
+                callback_data='search_filter:min_market_cap',
+            ),
+        ],
+    ],
+)
+
+to_search_kb = one_button_keyboard(text='Назад', callback_data='to_search')
+
 
 async def get_wallets_list_keyboard(client_id: int, *, page: int = 1):
     return await get_paginated_keyboard(
