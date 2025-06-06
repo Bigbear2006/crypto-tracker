@@ -1,3 +1,5 @@
+from typing import Optional
+
 from aiogram import types
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ObjectDoesNotExist
@@ -8,6 +10,7 @@ from bot.api.alchemy import AlchemyAPI, alchemy_chains
 from bot.api.dexscreener import DexscreenerAPI
 from bot.exceptions import WalletNotFound
 from bot.schemas import CoinInfo
+from bot.text_utils import age_to_str
 from core.choices import CoinTrackingParams
 
 
@@ -148,6 +151,17 @@ class CoinManager(models.Manager):
         return self.annotate(clients_count=models.Count('clients')).filter(
             clients_count__gt=0,
         )
+
+
+class ClientFiltersManager(models.Manager):
+    async def get_by_id(self, pk: int | str) -> Optional['ClientFilters']:
+        try:
+            return await self.aget(pk=pk)
+        except ObjectDoesNotExist:
+            return
+
+    async def update_by_id(self, pk: int | str, **kwargs):
+        return await self.filter(pk=pk).aupdate(**kwargs)
 
 
 class User(AbstractUser):
@@ -362,3 +376,39 @@ class Transaction(models.Model):
         verbose_name = 'Транзакция'
         verbose_name_plural = 'Транзакции'
         ordering = ['-date']
+
+
+class ClientFilters(models.Model):
+    client = models.OneToOneField(Client, models.CASCADE, primary_key=True)
+    min_liquidity = models.FloatField('Ликвидность')
+    min_price = models.FloatField('Мин. цена', null=True, blank=True)
+    max_price = models.FloatField('Макс. цена', null=True, blank=True)
+    min_age = models.IntegerField('Мин. возраст', default=0)
+    max_age = models.IntegerField('Мин. возраст', null=True, blank=True)
+    min_market_cap = models.IntegerField('Капитализация', default=0)
+    results = models.JSONField('Результаты')
+    objects = ClientFiltersManager()
+
+    class Meta:
+        verbose_name = 'Фильтры пользователя'
+        verbose_name_plural = 'Фильтры пользователей'
+
+    def __str__(self):
+        return str(self.client)
+
+    @property
+    def message_text(self):
+        text = ''
+        if self.min_liquidity:
+            text += f'Ликвидность: {self.min_liquidity}\n'
+        if self.min_price:
+            text += f'Мин. цена: {self.min_price}\n'
+        if self.max_price:
+            text += f'Макс. цена: {self.max_price}\n'
+        if self.min_age:
+            text += f'Мин. возраст: {age_to_str(self.min_age)}\n'
+        if self.max_age:
+            text += f'Макс. возраст: {age_to_str(self.max_age)}\n'
+        if self.min_market_cap:
+            text += f'Капитализация: {self.min_market_cap}\n'
+        return text

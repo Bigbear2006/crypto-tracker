@@ -113,6 +113,15 @@ class TokenInfo(BaseCoinInfo):
         if self.age:
             self.age = int(self.age)
 
+    def __hash__(self):
+        return hash(self.address)
+
+    def __eq__(self, other):
+        return self.address == other.address
+
+    def __ne__(self, other):
+        return self.address != other.address
+
     @property
     def message_text(self):
         return (
@@ -122,44 +131,6 @@ class TokenInfo(BaseCoinInfo):
             f'Капитализация: {round(self.market_cap, 2)}\n'
             f'Ликвидность: {round(self.liquidity, 2)}\n'
         )
-
-
-@dataclass
-class SearchFilters:
-    min_liquidity: float
-    min_price: float | None = None
-    max_price: float | None = None
-    min_age: int = 0
-    max_age: int | None = None
-    min_market_cap: float = 0
-
-    @classmethod
-    def from_dict(cls, data: dict):
-        return SearchFilters(
-            data.get('min_liquidity', 0),
-            data.get('min_price', None),
-            data.get('max_price', None),
-            data.get('min_age', 0),
-            data.get('max_age', None),
-            data.get('min_market_cap', 0),
-        )
-
-    @property
-    def message_text(self):
-        text = ''
-        if self.min_liquidity:
-            text += f'Ликвидность: {self.min_liquidity}\n'
-        if self.min_price:
-            text += f'Мин. цена: {self.min_price}\n'
-        if self.max_price:
-            text += f'Макс. цена: {self.max_price}\n'
-        if self.min_age:
-            text += f'Мин. возраст: {age_to_str(self.min_age)}\n'
-        if self.max_age:
-            text += f'Макс. возраст: {age_to_str(self.max_age)}\n'
-        if self.min_market_cap:
-            text += f'Капитализация: {self.min_market_cap}\n'
-        return text
 
 
 def exclude_none_dict_factory(data):

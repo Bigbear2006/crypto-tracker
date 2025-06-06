@@ -36,3 +36,7 @@ def price_to_str(price: int | float | None) -> str:
     if not price:
         return 'Нет'
     return f'${price}'
+
+
+def chunk_list(lst: list, size: int) -> list:
+    return [lst[i : i + size] for i in range(0, len(lst), size)]

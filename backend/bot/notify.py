@@ -3,6 +3,7 @@ import time
 import traceback
 from asyncio import ALL_COMPLETED
 from collections.abc import Callable, Coroutine
+from dataclasses import asdict
 from datetime import UTC, datetime
 from itertools import groupby
 from typing import Any
@@ -13,6 +14,7 @@ from django.contrib.postgres.aggregates import ArrayAgg
 from django.db.models import ExpressionWrapper, F, FloatField, Q
 
 from bot.api.alchemy import AlchemyAPI
+from bot.api.birdeye import BirdEyeAPI
 from bot.api.dexscreener import DexscreenerAPI
 from bot.exceptions import CoinNotFound
 from bot.loader import bot, logger, loop
@@ -21,12 +23,19 @@ from bot.schemas import (
     CoinInputData,
     CoinPrice,
     HistoricalPrice,
+    TokenListParams,
     TransactionData,
 )
+from bot.services.client_filters import (
+    filter_results,
+    get_and_filter_results,
+)
 from bot.settings import settings
+from bot.text_utils import chunk_list
 from core.models import (
     Client,
     ClientCoin,
+    ClientFilters,
     Coin,
     CoinTrackingParams,
     Transaction,
@@ -57,10 +66,6 @@ def handle_send_message_errors(send_message_func):
 @handle_send_message_errors
 async def safe_send_message(chat_id: int | str, text: str):
     await bot.send_message(chat_id, text)
-
-
-def chunk_list(lst: list, size: int) -> list:
-    return [lst[i : i + size] for i in range(0, len(lst), size)]
 
 
 async def asyncio_wait(
@@ -322,6 +327,37 @@ async def notify_wallets_transactions():
         logger.info('There are no new transactions')
 
 
+async def get_new_coins(api: BirdEyeAPI, f: ClientFilters):
+    results = filter_results(f, return_str=False)
+    new_results = await get_and_filter_results(
+        api,
+        f,
+        TokenListParams(min_liquidity=int(f.min_liquidity)),
+    )
+
+    new_coins = [i for i in new_results if i not in results]
+    if new_coins:
+        text = '\n\n'.join(i.message_text for i in new_coins)
+        await safe_send_message(
+            f.client_id,
+            f'Новые монеты по фильтрам:\n\n{text}'[:4000],
+        )
+        await ClientFilters.objects.update_by_id(
+            f.pk,
+            results=[*f.results, *[asdict(i) for i in new_coins]],
+        )
+
+
+async def notify_search_filters():
+    async with BirdEyeAPI() as api:
+        await asyncio_wait(
+            [
+                asyncio.create_task(get_new_coins(api, i))
+                async for i in ClientFilters.objects.all()
+            ],
+        )
+
+
 async def run_loop_task(
     func: Callable[[], Coroutine[Any, Any, None]],
     *,
@@ -343,3 +379,7 @@ async def notify_coins():
 
 async def notify_wallets():
     await run_loop_task(notify_wallets_transactions)
+
+
+async def notify_filters():
+    await run_loop_task(notify_search_filters, timeout=120)

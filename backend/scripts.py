@@ -6,12 +6,12 @@ from asgiref.sync import sync_to_async
 from django.db.models import Count
 
 from bot.loader import logger
+from bot.text_utils import chunk_list
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
 django.setup()
 
 from bot.api.dexscreener import DexscreenerAPI  # noqa
-from bot.notify import chunk_list  # noqa
 from core.models import Coin  # noqa
 
 

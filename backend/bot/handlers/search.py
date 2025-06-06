@@ -8,28 +8,19 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
 from bot.api.birdeye import BirdEyeAPI
-from bot.bulk_create import bulk_get_or_create_coins
 from bot.keyboards.inline import cancel_kb, search_kb, to_search_kb
 from bot.parse import parse_message
-from bot.schemas import SearchFilters, TokenInfo, TokenListParams
+from bot.schemas import TokenListParams
+from bot.services.client_filters import (
+    add_date_to_coins,
+    filter_results,
+    get_and_filter_results,
+)
 from bot.states import SearchState
 from bot.text_utils import parse_age
+from core.models import ClientFilters
 
 router = Router()
-
-
-def filter_results(results: list[dict], f: SearchFilters) -> list[str]:
-    return [
-        TokenInfo(**i).message_text
-        for i in results
-        if (
-            (f.min_price is None or i['price'] >= f.min_price)
-            and (f.max_price is None or i['price'] <= f.max_price)
-            and (f.min_age == 0 or i.get('age', 0) >= f.min_age)
-            and (f.max_age is None or i.get('age', 0) <= f.max_age)
-            and i['market_cap'] >= f.min_market_cap
-        )
-    ]
 
 
 async def set_search_filter(
@@ -39,7 +30,6 @@ async def set_search_filter(
     field: str,
     parse_func: Callable[[str], Any],
     error_text: str,
-    success_text: Callable[[Any], str],
     exceptions=(ValueError,),
 ):
     value = parse_message(
@@ -52,26 +42,53 @@ async def set_search_filter(
         await msg.answer(error_text, reply_markup=to_search_kb)
         return
 
-    data = await state.get_data()
     extra_data = {}
-    if field in ('min_age', 'max_age') and not data.get('ages_is_set', False):
-        coins = await bulk_get_or_create_coins(
-            'solana',
-            [i['address'] for i in data['results']],
-        )
-        results = [
-            {**i, 'age': coins[i['address']].age}
-            for i in data['results']
-            if i['address'] in coins
-        ]
-        extra_data = {'results': results, 'ages_is_set': True}
+    data = await state.get_data()
+    f = await ClientFilters.objects.get_by_id(msg.chat.id)
 
-    await state.update_data({field: value}, **extra_data)
-    await msg.answer(success_text(value), reply_markup=to_search_kb)
+    if field == 'min_liquidity':
+        async with BirdEyeAPI() as api:
+            results = await get_and_filter_results(
+                api,
+                f,
+                TokenListParams(min_liquidity=value),
+            )
+            extra_data = {'results': [asdict(i) for i in results]}
+
+    if field in ('min_age', 'max_age') and not data.get('ages_is_set', False):
+        results = await add_date_to_coins(f.results)
+        await state.update_data(ages_is_set=True)
+        extra_data = {'results': results}
+
+    await ClientFilters.objects.update_by_id(
+        msg.chat.id,
+        **{field: value},
+        **extra_data,
+    )
+
+    await msg.answer(**await get_search_menu_data(msg.chat.id))
+    await state.set_state()
+
+
+async def get_search_menu_data(client_id: int | str):
+    filters = await ClientFilters.objects.get_by_id(client_id)
+    results = filter_results(filters)
+    return {
+        'text': (
+            f'Найдено {len(results)} монет.\n'
+            f'Фильтры:\n{filters.message_text}\n'
+            f'Вы можете установить дополнительные фильтры ниже'
+        ),
+        'reply_markup': search_kb,
+    }
 
 
 @router.message(Command('search'))
 async def search(msg: Message, state: FSMContext):
+    if await ClientFilters.objects.get_by_id(msg.chat.id):
+        await msg.answer(**await get_search_menu_data(msg.chat.id))
+        return
+
     await state.set_state(SearchState.min_liquidity)
     await msg.answer('Введите минимальную ликвидность', reply_markup=cancel_kb)
 
@@ -91,36 +108,27 @@ async def set_min_liquidity(msg: Message, state: FSMContext):
             TokenListParams(min_liquidity=min_liquidity),
         )
 
-    filters = SearchFilters(min_liquidity=min_liquidity)
-    await state.update_data(
+    await ClientFilters.objects.acreate(
+        client_id=msg.chat.id,
+        min_liquidity=min_liquidity,
         results=[asdict(i) for i in results],
-        **asdict(filters),
     )
-    await msg.answer(
-        f'Найдено {len(results)} монет.\n'
-        f'Фильтры:\n{filters.message_text}\n'
-        f'Вы можете установить дополнительные фильтры ниже',
-        reply_markup=search_kb,
-    )
+    await msg.answer(**await get_search_menu_data(msg.chat.id))
+    await state.set_state()
 
 
 @router.callback_query(F.data == 'to_search')
 async def to_search(query: CallbackQuery, state: FSMContext):
-    data = await state.get_data()
-    filters = SearchFilters.from_dict(data)
-    results = filter_results(data['results'], filters)
     await state.set_state()
     await query.message.edit_text(
-        f'Найдено {len(results)} монет.\n'
-        f'Фильтры:\n{filters.message_text}\n'
-        f'Вы можете установить дополнительные фильтры ниже',
-        reply_markup=search_kb,
+        **await get_search_menu_data(query.message.chat.id),
     )
 
 
 @router.callback_query(F.data.startswith('search_filter'))
 async def set_search_filter_handler(query: CallbackQuery, state: FSMContext):
     texts = {
+        'min_liquidity': 'Введите минимальную ликвидность',
         'min_price': 'Введите минимальную цену монеты. Пример: 4.5',
         'max_price': 'Введите максимальную цену монеты. Пример: 4.5',
         'min_age': (
@@ -159,18 +167,21 @@ async def set_extra_filters(msg: Message, state: FSMContext):
         field=field,
         parse_func=parse_func,
         error_text='Вы ввели некорректное значение. Попробуйте еще раз',
-        success_text=lambda x: 'Фильтр добавлен!',
     )
 
 
 @router.callback_query(F.data == 'show_search_results')
-async def show_search_results(query: CallbackQuery, state: FSMContext):
-    data = await state.get_data()
-    filters = SearchFilters.from_dict(data)
-    results = '\n'.join(filter_results(data['results'], filters))
+async def show_search_results(query: CallbackQuery):
+    filters = await ClientFilters.objects.get_by_id(query.message.chat.id)
+    results = '\n'.join(filter_results(filters))
 
-    await query.message.edit_text(f'Результаты поиска:\n{results[:4000]}')
+    await query.message.edit_text(
+        f'Результаты поиска:\n{results[:4000]}',
+        reply_markup=to_search_kb,
+    )
+
     if len(results) > 4000:
-        await query.message.answer(results[4000:8000])
-
-    await state.clear()
+        await query.message.answer(
+            results[4000:8000],
+            reply_markup=to_search_kb,
+        )

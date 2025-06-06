@@ -3,7 +3,7 @@ import asyncio
 from asgiref.sync import sync_to_async
 
 from bot.api.dexscreener import DexscreenerAPI
-from bot.notify import chunk_list
+from bot.text_utils import chunk_list
 from core.models import Coin
 
 

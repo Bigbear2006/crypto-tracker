@@ -145,27 +145,31 @@ search_kb = InlineKeyboardMarkup(
         ],
         [
             InlineKeyboardButton(
-                text='Мин. цена монеты',
+                text='Мин. цена',
                 callback_data='search_filter:min_price',
             ),
             InlineKeyboardButton(
-                text='Макс. цена монеты',
+                text='Макс. цена',
                 callback_data='search_filter:max_price',
             ),
         ],
         [
             InlineKeyboardButton(
-                text='Мин. возраст Монеты',
+                text='Мин. возраст',
                 callback_data='search_filter:min_age',
             ),
             InlineKeyboardButton(
-                text='Макс. возраст Монеты',
+                text='Макс. возраст',
                 callback_data='search_filter:max_age',
             ),
         ],
         [
             InlineKeyboardButton(
-                text='Капитализация монеты',
+                text='Ликвидность',
+                callback_data='search_filter:min_liquidity',
+            ),
+            InlineKeyboardButton(
+                text='Капитализация',
                 callback_data='search_filter:min_market_cap',
             ),
         ],
