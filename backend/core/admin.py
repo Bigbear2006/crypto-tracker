@@ -47,3 +47,8 @@ class TransactionAdmin(admin.ModelAdmin):
     list_select_related = ('wallet', 'coin')
     readonly_fields = ('date', 'signature')
     list_filter = ('sent', CoinFilter)
+
+
+@admin.register(models.ClientFilters)
+class ClientFiltersAdmin(admin.ModelAdmin):
+    list_select_related = ('client',)

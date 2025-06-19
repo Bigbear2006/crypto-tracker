@@ -13,6 +13,14 @@ class CoinNotFound(NotFound):
         super().__init__(address, 'Coin')
 
 
-class WalletNotFound(Exception):
+class WalletNotFound(NotFound):
     def __init__(self, address: str):
         super().__init__(address, 'Wallet')
+
+
+class BirdEyeBadRequest(Exception):
+    def __init__(self, message: str):
+        self.message = message
+
+    def __str__(self):
+        return self.message

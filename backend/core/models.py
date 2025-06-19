@@ -386,6 +386,7 @@ class ClientFilters(models.Model):
     min_age = models.IntegerField('Мин. возраст', default=0)
     max_age = models.IntegerField('Мин. возраст', null=True, blank=True)
     min_market_cap = models.IntegerField('Капитализация', default=0)
+    offset = models.IntegerField('Смещение', default=0)
     results = models.JSONField('Результаты')
     objects = ClientFiltersManager()
 
