@@ -14,7 +14,7 @@ async def main():
 
     from bot.handlers import alerts, base, coin, filters, search, wallet
     from bot.middlewares import WithClientMiddleware
-    from bot.notify import notify_filters
+    from bot.notify import notify_coins, notify_filters, notify_wallets
 
     dp.include_routers(
         base.router,
@@ -60,8 +60,8 @@ async def main():
         ],
     )
 
-    # loop.create_task(notify_coins())
-    # loop.create_task(notify_wallets())
+    loop.create_task(notify_coins())
+    loop.create_task(notify_wallets())
     loop.create_task(notify_filters())
 
     logger.info('Starting bot...')

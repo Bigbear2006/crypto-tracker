@@ -362,9 +362,11 @@ async def notify_search_filters():
         await asyncio_wait(
             [
                 asyncio.create_task(get_new_coins(api, i))
-                async for i in ClientFilters.objects.select_related(
-                    'client',
-                ).all()
+                async for i in ClientFilters.objects.filter(
+                    client__alerts_enabled=True,
+                )
+                .select_related('client')
+                .all()
             ],
         )
 

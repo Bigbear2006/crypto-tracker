@@ -25,7 +25,9 @@ class BirdEyeAPI(APIClient):
     async def get_token_list(
         self,
         params: TokenListParams,
-        retries: int = 3,
+        *,
+        retries: int = 2,
+        raise_if_empty: bool = False,
     ) -> list[TokenInfo]:
         async with self.session.get(
             'defi/tokenlist',
@@ -41,7 +43,10 @@ class BirdEyeAPI(APIClient):
         if not data.get('data') and retries > 0:
             logger.info(data)
             await asyncio.sleep(random.randint(3, 15))
-            return await self.get_token_list(params, retries - 1)
+            return await self.get_token_list(params, retries=retries - 1)
+
+        if raise_if_empty and not data['data']['tokens']:
+            raise BirdEyeBadRequest('Got 0 results')
 
         return [
             TokenInfo(

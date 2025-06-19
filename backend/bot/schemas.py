@@ -94,7 +94,7 @@ class TransactionData:
 
 @dataclass
 class TokenListParams:
-    sort_by: str = 'liquidity'
+    sort_by: str = 'v24hChangePercent'
     sort_type: str = 'desc'
     offset: int = 0
     limit: int = 50

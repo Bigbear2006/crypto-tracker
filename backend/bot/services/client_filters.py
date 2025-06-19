@@ -55,7 +55,10 @@ async def get_and_filter_results(
     return filter_results(
         f,
         results=await add_date_to_coins(
-            [asdict(i) for i in await api.get_token_list(params)],
+            [
+                asdict(i)
+                for i in await api.get_token_list(params, raise_if_empty=True)
+            ],
         ),
         return_str=False,
     )

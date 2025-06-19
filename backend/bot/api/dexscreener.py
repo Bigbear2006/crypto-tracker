@@ -26,7 +26,10 @@ class DexscreenerAPI(APIClient):
             try:
                 data = await rsp.json()
             except ContentTypeError:
-                logger.info(f'get_coins_info returns text: {await rsp.text()}')
+                logger.info(
+                    f'get_coins_info(chain={chain}, addresses={addresses[:2]})'
+                    f' returns text: {await rsp.text()}',
+                )
                 return []
 
         return [
